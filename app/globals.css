@@ -1,0 +1,425 @@
+/* ────────────────────────────────────────────────────────────
+   GrowGauge design system — deliberate minimalism
+   Paper / Ink / Indigo / Turmeric / Leaf / Clay
+   One accent per screen, one primary action, one hover style.
+   ──────────────────────────────────────────────────────────── */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #f1f0e6;
+  --paper-deep: #e8e6da;
+  --paper-tile: #edebde;
+  --paper-line: #d8d6c6;
+  --ink: #1e2a1f;
+  --ink-soft: #565f58;
+  --ink-mute: #747d74;
+  --indigo: #2f3e5c;
+  --indigo-soft: #4a5c80;
+  --indigo-tint: #e6e9f0;
+  --turmeric: #c1861a;
+  --turmeric-deep: #9c6e10;
+  --turmeric-tint: #f4e7c9;
+  --leaf: #3f6b45;
+  --leaf-soft: #5b8261;
+  --leaf-tint: #e4ebe1;
+  --clay: #a85736;
+  --clay-deep: #8c462b;
+  --clay-tint: #f0e3da;
+  --radius: 2px;
+}
+
+html {
+  font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--paper);
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--turmeric-tint);
+  color: var(--ink);
+}
+
+/* ── The one interaction treatment, used everywhere ─────────
+   Text links get a quiet Indigo underline; buttons and rows get
+   a background tint. Nothing ever scales, lifts, or shifts colour
+   in more than one way at once.                           ── */
+@layer base {
+  a {
+    color: var(--indigo);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    transition:
+      color 140ms ease,
+      text-decoration-color 140ms ease;
+  }
+  a:hover {
+    color: var(--indigo-soft);
+    text-decoration-color: currentColor;
+  }
+}
+
+@layer components {
+  /* ── Buttons: primary (one Turmeric per screen) + quiet ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    background: none;
+    transition:
+      background-color 140ms ease,
+      color 140ms ease,
+      border-color 140ms ease;
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--indigo-soft);
+    outline-offset: 2px;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: var(--turmeric);
+    color: var(--ink);
+    border-color: transparent;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: #cf9726;
+  }
+  .btn-primary:active:not(:disabled) {
+    background-color: var(--turmeric-deep);
+    color: #ffffff;
+  }
+
+  .btn-quiet {
+    background-color: transparent;
+    color: var(--indigo);
+    border-color: #abb4c8;
+  }
+  .btn-quiet:hover:not(:disabled) {
+    background-color: var(--indigo-tint);
+  }
+
+  .btn-link {
+    padding: 0.2rem 0;
+    border: none;
+    background: none;
+    color: var(--indigo);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    transition:
+      color 140ms ease,
+      text-decoration-color 140ms ease;
+  }
+  .btn-link:hover:not(:disabled) {
+    color: var(--indigo-soft);
+    text-decoration-color: currentColor;
+  }
+
+  /* ── Form chrome ── */
+  .field-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .field-label .opt {
+    font-weight: 400;
+    color: var(--ink-mute);
+  }
+  .field-hint {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--ink-mute);
+  }
+  .field-field,
+  .input-field {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+  .field-field::placeholder,
+  .input-field::placeholder {
+    color: var(--ink-mute);
+  }
+  .field-field:focus,
+  .input-field:focus {
+    outline: none;
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 1px var(--indigo);
+  }
+  .field-field:disabled,
+  .input-field:disabled {
+    background: var(--paper-tile);
+    color: var(--ink-mute);
+    cursor: not-allowed;
+  }
+  select.field-field,
+  select.input-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234A5C80' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    padding-right: 2rem;
+  }
+  .field-error {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--clay);
+    font-weight: 600;
+  }
+
+  /* ── Ledger rows (financial-table density) ── */
+  .ledger {
+    border-top: 1px solid var(--paper-line);
+  }
+  .ledger-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    column-gap: 1.25rem;
+    align-items: center;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .ledger-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .ledger-sub {
+    font-size: 0.75rem;
+    color: var(--ink-mute);
+    margin-top: 0.1rem;
+  }
+  .ledger-track {
+    height: 0.375rem;
+    background: var(--paper-line);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 0.3rem;
+  }
+  .ledger-fill {
+    height: 100%;
+    background: var(--indigo);
+    border-radius: 999px;
+  }
+  .ledger-fill.strong {
+    background: var(--leaf);
+  }
+  .ledger-fill.neutral {
+    background: var(--ink);
+  }
+  .ledger-value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ── Band markers ── */
+  .band-strong { color: var(--leaf); }
+  .band-moderate { color: var(--indigo); }
+  .band-developing { color: var(--ink); }
+  .band-early { color: var(--clay); }
+
+  /* ── Paper surface panels (flat, hairline-bordered) ── */
+  .sheet {
+    background: #fff;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+  }
+  .sheet-tint {
+    background: var(--paper-tile);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+  }
+
+  /* ── Section rule / heading treatment ── */
+  .section-kicker {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .hairline {
+    border: 0;
+    border-top: 1px solid var(--paper-line);
+  }
+
+  /* ── The single deliberate motion moment: the score reveal ── */
+  .reveal {
+    animation: scoreReveal 0.55s ease-out both;
+  }
+  .fade-in {
+    animation: stepIn 0.24s ease-out both;
+  }
+}
+
+@keyframes scoreReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes stepIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Range sliders (the what-if levers) ── */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--paper-line);
+  cursor: pointer;
+  margin: 0.5rem 0;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--indigo);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--indigo);
+}
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--indigo);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--indigo);
+}
+
+/* ── Toggle switch (Indigo when on) ── */
+.toggle-track {
+  width: 2.4rem;
+  height: 1.4rem;
+  background: var(--paper-line);
+  border-radius: 999px;
+  position: relative;
+  transition: background-color 140ms ease;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--paper-line);
+  transition: transform 140ms ease;
+}
+.peer:checked ~ .toggle-track {
+  background: var(--indigo);
+}
+.peer:checked ~ .toggle-track::after {
+  transform: translateX(1rem);
+  box-shadow: none;
+}
+
+/* ── Thin scrollbar ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--paper-line);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-mute);
+}
+
+/* ── Sequential tables (history, facilitator, leaderboard) ── */
+.data-table {
+  width: 100%;
+  font-size: 0.8125rem;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.data-table th {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--ink);
+  padding: 0 0.75rem 0.5rem 0;
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 0.6rem 0.75rem 0.6rem 0;
+  border-bottom: 1px solid var(--paper-line);
+  vertical-align: top;
+}
+.data-table tr:last-child td {
+  border-bottom: 0;
+}
+
+@keyframes gauge-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 28;
+  }
+}
+
+.gauge-loader .gauge-loader-arc {
+  stroke-dasharray: 100;
+  animation: gauge-draw 1.2s ease-out forwards;
+}

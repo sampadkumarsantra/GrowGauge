@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FPOSubmission {
+  id                           String        @id @default(uuid())
+  accessToken                  String        @unique
+  fpoGroupId                   String?
+  fpoName                      String
+  state                        String
+  district                     String
+  registrationType             String
+  activeMembers                Int
+  members2YrAgo                Int
+  revenueYear1                 Float
+  revenueYear2                 Float?
+  revenueYear3                 Float?
+  costYear1                    Float
+  costYear2                    Float?
+  costYear3                    Float?
+  products                     String
+  activeBuyersCount            Int
+  contractSalesPct             Float
+  estimatedPriceRealizationPct Float?
+  auditedAccounts              Boolean
+  agmCountLastYear             Int
+  boardMeetingsLastYear        Int
+  email                        String?
+  optedIntoLeaderboard         Boolean       @default(false)
+  facilitatorId                String?
+  createdAt                    DateTime      @default(now())
+  updatedAt                    DateTime      @updatedAt
+  facilitator                  Facilitator?  @relation(fields: [facilitatorId], references: [id], onDelete: SetNull)
+  roadmapItems                 RoadmapItem[]
+  scoreResult                  ScoreResult?
+
+  @@index([fpoGroupId])
+  @@index([facilitatorId])
+  @@index([state, district, optedIntoLeaderboard])
+}
+
+model RoadmapItem {
+  id                   String        @id @default(uuid())
+  submissionId         String
+  submission           FPOSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  stageLabel           String
+  actionText           String
+  targetFactor         String
+  estimatedScoreImpact Float
+  completed            Boolean       @default(false)
+  completedAt          DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([submissionId])
+}
+
+model SchemeReference {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  eligibilityTags String
+  description     String
+  link            String
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model LenderTypeReference {
+  id              String   @id @default(uuid())
+  lenderType      String   @unique
+  minBandRequired String
+  description     String
+  typicalUseCase  String
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Facilitator {
+  id           String          @id @default(uuid())
+  name         String
+  organization String
+  accessToken  String          @unique
+  submissions  FPOSubmission[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model ScoreResult {
+  id                    String        @id @default(uuid())
+  submissionId          String        @unique
+  submission            FPOSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  overallScore          Float
+  band                  String
+  membershipScore       Float
+  revenueStabilityScore Float
+  costEfficiencyScore   Float
+  diversificationScore  Float
+  marketLinkageScore    Float
+  governanceScore       Float
+  narrativeSummary      String
+  suggestions           String
+  dataCompletenessFlag  Boolean
+  calculatedAt          DateTime      @default(now())
+}
