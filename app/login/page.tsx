@@ -10,9 +10,10 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
     typeof searchParams?.callbackUrl === 'string' && searchParams.callbackUrl.startsWith('/')
       ? searchParams.callbackUrl
       : '/dashboard';
-  const urlError =
-    typeof searchParams?.error === 'string' && searchParams.error.length > 0
-      ? searchParams.error
-      : null;
-  return <LoginForm googleEnabled={googleEnabled} initialCallbackUrl={callbackUrl} initialError={urlError} />;
+  const error: string | null =
+    typeof searchParams?.error === 'string' ? searchParams.error : null;
+
+  return (
+    <LoginForm googleEnabled={googleEnabled} initialCallbackUrl={callbackUrl} initialError={error} />
+  );
 }

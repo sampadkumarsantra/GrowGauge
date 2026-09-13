@@ -1,8 +1,10 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Field } from '@/components/ui/field';
+import PasswordField from '@/components/ui/password-field';
+import AuthShell from '@/components/ui/auth-shell';
 
 export default function RegisterForm({
   googleEnabled,
@@ -11,8 +13,6 @@ export default function RegisterForm({
   googleEnabled: boolean;
   initialCallbackUrl?: string;
 }) {
-  const callbackUrl = initialCallbackUrl;
-
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +23,11 @@ export default function RegisterForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if ((e.currentTarget as HTMLFormElement).checkValidity() === false) return;
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
 
@@ -49,111 +54,113 @@ export default function RegisterForm({
 
   if (created) {
     return (
-      <div className="max-w-md mx-auto px-4 sm:px-6 py-14 text-center">
-        <p className="section-kicker mb-2">Check your inbox</p>
-        <h1 className="font-slab text-2xl font-semibold text-ink">Account created</h1>
-        <p className="mt-3 text-[14px] text-ink-soft leading-relaxed">
-          We sent a verification link to <strong className="text-ink">{email}</strong>. Verify your
-          email to save assessments to your account and claim existing scorecards — then log in below.
-        </p>
-        <div className="mt-6 space-x-3">
-          <Link href="/login" className="btn btn-primary">Go to log in</Link>
+      <AuthShell title="Check your inbox" subtitle="">
+        <div className="text-center space-y-4">
+          <p className="text-[14px] text-ink-soft leading-relaxed">
+            We sent a verification link to <strong className="text-ink">{email}</strong>. Verify
+            your email to save assessments to your account and claim existing scorecards â€” then log
+            in below.
+          </p>
+          <Link href="/login" className="btn btn-primary w-full">
+            Go to log in
+          </Link>
+          <p className="text-[12px] text-ink-mute">
+            Didn&apos;t get the email? Check your spam folder, or{' '}
+            <Link
+              href={`/login?email=${encodeURIComponent(email)}&unverified=1`}
+              className="font-semibold"
+            >
+              request a new link
+            </Link>
+            .
+          </p>
         </div>
-        <p className="mt-4 text-[12px] text-ink-mute">
-          Didn't get the email? Check your spam folder, or{' '}
-          <Link href={`/login?email=${encodeURIComponent(email)}&unverified=1`} className="font-semibold">
-            request a new link
-          </Link>.
-        </p>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 sm:px-6 py-14">
-      <header className="space-y-2 mb-8">
-        <p className="section-kicker">GrowGauge account</p>
-        <h1 className="font-slab text-3xl font-semibold tracking-tight text-ink">Create an account</h1>
-        <p className="text-[14px] text-ink-soft leading-relaxed">
-          Keep every assessment, score history and improvement roadmap in one place — share the
-          private link with lenders whenever you need to.
-        </p>
-      </header>
+    <AuthShell
+      title="Create your account"
+      subtitle="Save every assessment and score â€” share your scorecard anytime."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Name" optional>
+          <input
+            type="text"
+            autoComplete="name"
+            name="name"
+            className="field-field w-full"
+            placeholder="e.g. Sushma Devi"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+          />
+        </Field>
 
-      <div className="sheet px-5 sm:px-8 py-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <Field label="Name" optional>
-            <input
-              type="text"
-              autoComplete="name"
-              className="field-field"
-              placeholder="e.g. Sushma Devi"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </Field>
+        <Field label="Email">
+          <input
+            type="email"
+            autoComplete="email"
+            name="email"
+            className="field-field w-full"
+            placeholder="you@example.org"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </Field>
 
-          <Field label="Email">
-            <input
-              type="email"
-              autoComplete="email"
-              className="field-field"
-              placeholder="you@example.org"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </Field>
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="new-password"
+          placeholder="At least 8 characters"
+          hint="At least 8 characters."
+          minLength={8}
+        />
 
-          <Field label="Password" hint="At least 8 characters.">
-            <input
-              type="password"
-              autoComplete="new-password"
-              className="field-field"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-            />
-          </Field>
+        <PasswordField
+          label="Confirm password"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          autoComplete="new-password"
+          placeholder="Repeat your password"
+          minLength={8}
+        />
 
-          <Field label="Confirm password">
-            <input
-              type="password"
-              autoComplete="new-password"
-              className="field-field"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              minLength={8}
-            />
-          </Field>
+        {error && <p className="text-[13px] text-clay">{error}</p>}
 
-          {error && <p className="text-[13px] text-clay">{error}</p>}
-
-          <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
-            {isSubmitting ? 'Creating account…' : 'Create account'}
-          </button>
-        </form>
+        <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
+          {isSubmitting ? 'Creating accountâ€¦' : 'Create account'}
+        </button>
 
         {googleEnabled && (
-          <div className="mt-4">
+          <>
             <div className="flex items-center gap-3 my-4">
               <span className="h-px flex-1 bg-paper-line" />
-              <span className="text-[11px] uppercase tracking-widest text-ink-mute font-semibold">or</span>
+              <span className="text-[11px] uppercase tracking-widest text-ink-mute font-semibold">
+                or
+              </span>
               <span className="h-px flex-1 bg-paper-line" />
             </div>
-            <a href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`} className="btn btn-quiet w-full">
+            <a
+              href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(initialCallbackUrl)}`}
+              className="btn btn-quiet w-full"
+            >
               Sign up with Google
             </a>
-          </div>
+          </>
         )}
+      </form>
 
-        <p className="mt-6 text-[13px] text-ink-soft text-center">
-          Already have an account?{' '}
-          <Link href="/login" className="font-semibold">Log in</Link>
-        </p>
-      </div>
-    </div>
+      <p className="mt-6 text-[13px] text-ink-soft text-center">
+        Already have an account?{' '}
+        <Link href="/login" className="font-semibold">
+          Log in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

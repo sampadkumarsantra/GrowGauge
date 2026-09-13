@@ -1,10 +1,23 @@
-'use client';
+﻿'use client';
 
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Field } from '@/components/ui/field';
+import PasswordField from '@/components/ui/password-field';
+import AuthShell from '@/components/ui/auth-shell';
+
+function urlError(key: string | null): string | null {
+  if (!key) return null;
+  const known: Record<string, string> = {
+    AuthError: 'The email or password you entered is incorrect.',
+    CredentialsSignin: 'The email or password you entered is incorrect.',
+    AccountExistsSignin:
+      'An account already exists for this email. Sign in with your email and password instead.',
+  };
+  return known[key] ?? 'Sign-in failed. Please try again.';
+}
 
 export default function LoginForm({
   googleEnabled,
@@ -19,136 +32,105 @@ export default function LoginForm({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [errorParam, setErrorParam] = useState<string | null>(initialError);
-
-  const callbackUrl = initialCallbackUrl;
+  const [error, setError] = useState<string | null>(initialError ? urlError(initialError) : null);
 
   useEffect(() => {
-    if (initialError) setErrorParam(initialError);
+    if (initialError) setError(urlError(initialError));
   }, [initialError]);
-
-  const urlError = (key: string | null): string | null => {
-    if (!key) return null;
-    const known: Record<string, string> = {
-      AuthError: 'Authentication failed. The email or password you entered is incorrect.',
-      CredentialsSignin: 'Authentication failed. The email or password you entered is incorrect.',
-      AccountExistsSignin: 'An account already exists for this email. Sign in with your email and password instead.',
-    };
-    return known[key] ?? 'Sign-in failed. Please try again.';
-  };
-
-  const caretMessage = () =>
-    [
-      errorParam,
-      formError,
-    ]
-      .filter((m): m is string => Boolean(m))
-      .map((m) => <p key={m}>{m}</p>);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) {
-      setFormError('Please enter your email and password.');
-      return;
-    }
+    if ((e.currentTarget as HTMLFormElement).checkValidity() === false) return;
     setSubmitting(true);
-    setFormError(null);
-
+    setError(null);
     try {
       const result = await signIn('credentials', {
         redirect: false,
         email: email.trim(),
         password,
-        callbackUrl,
+        callbackUrl: initialCallbackUrl,
       });
-
       if (result?.error) {
-        setFormError(urlError(result.error) ?? 'Sign-in failed. Please try again.');
+        setError(urlError(result.error) ?? 'Sign-in failed. Please try again.');
       } else if (result?.ok) {
-        router.push(callbackUrl);
+        router.push(initialCallbackUrl);
         router.refresh();
       } else {
-        setFormError('Sign-in failed. Please try again.');
+        setError('Sign-in failed. Please try again.');
       }
     } catch {
-      setFormError('Something went wrong. Please try again.');
+      setError('Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1 className="page-title">Sign in</h1>
-        <p className="subtle">Paste the scorecard link you received, then sign in to save it to your dashboard.</p>
+    <AuthShell
+      title="Log in to GrowGauge"
+      subtitle="Access your saved assessments and scorecards."
+    >
+      <form onSubmit={handleSubmit} noValidate={false} className="space-y-4">
+        <Field label="Email">
+          <input
+            type="email"
+            autoComplete="email"
+            name="email"
+            className="field-field w-full"
+            placeholder="you@example.org"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoFocus
+            required
+          />
+        </Field>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <Field label="Email">
-              <input
-                type="email"
-                autoComplete="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input w-full"
-                placeholder="you@example.com"
-                required
-              />
-            </Field>
-          </div>
+        <div className="space-y-1">
+          <PasswordField
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            placeholder="Your password"
+          />
+          <p className="text-[12px] text-ink-mute text-right">
+            <Link href="/forgot-password" className="font-semibold hover:underline">
+              Forgot password?
+            </Link>
+          </p>
+        </div>
 
-          <div>
-            <Field label="Password">
-              <input
-                type="password"
-                autoComplete="current-password"
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input w-full"
-                placeholder="Your password"
-                required
-              />
-            </Field>
-          </div>
+        {error && <p className="text-[13px] text-clay">{error}</p>}
 
-          {caretMessage().length > 0 && (
-            <div role="alert" className="alert-error">
-              {caretMessage()}
-            </div>
-          )}
-
-          <button type="submit" disabled={submitting} className="btn btn-primary w-full">
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+        <button type="submit" disabled={submitting} className="btn btn-primary w-full">
+          {submitting ? 'Logging inâ€¦' : 'Log in'}
+        </button>
 
         {googleEnabled && (
-          <div className="mt-4">
-            <div className="divider-with-label">
-              <span>or</span>
+          <>
+            <div className="flex items-center gap-3 my-4">
+              <span className="h-px flex-1 bg-paper-line" />
+              <span className="text-[11px] uppercase tracking-widest text-ink-mute font-semibold">
+                or
+              </span>
+              <span className="h-px flex-1 bg-paper-line" />
             </div>
-            <a href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(callbackUrl)}`} className="btn btn-quiet w-full">
+            <a
+              href={`/api/auth/signin/google?callbackUrl=${encodeURIComponent(initialCallbackUrl)}`}
+              className="btn btn-quiet w-full"
+            >
               Continue with Google
             </a>
-          </div>
+          </>
         )}
+      </form>
 
-        <p className="mt-6 center-muted">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-semibold">
-            Sign up
-          </Link>
-        </p>
-        <p className="mt-2 center-muted">
-          <Link href="/forgot-password" className="font-semibold">
-            Forgot your password?
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="mt-6 text-[13px] text-ink-soft text-center">
+        Don&apos;t have an account?{' '}
+        <Link href="/register" className="font-semibold">
+          Sign up
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
