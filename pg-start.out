@@ -111,3 +111,7 @@ Success. You can now start the database server using:
 
 2026-09-13 23:22:29.788 IST [11932] LOG:  checkpoint complete: wrote 3 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.009 s, sync=0.006 s, total=0.031 s; sync files=4, longest=0.003 s, average=0.002 s; distance=5082 kB, estimate=5190 kB; lsn=0/3BA4120, redo lsn=0/3BA40C8
 
+2026-09-13 23:27:29.799 IST [11932] LOG:  checkpoint starting: time
+
+2026-09-13 23:27:33.905 IST [11932] LOG:  checkpoint complete: wrote 37 buffers (0.2%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=4.046 s, sync=0.023 s, total=4.106 s; sync files=19, longest=0.002 s, average=0.002 s; distance=265 kB, estimate=4698 kB; lsn=0/3BE6608, redo lsn=0/3BE6578
+
