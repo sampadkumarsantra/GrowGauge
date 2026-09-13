@@ -5,6 +5,8 @@ interface RouteContext {
   params: { id: string };
 }
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Public, no-token verification endpoint. By design returns ONLY
  * fpoName, band and assessment date — never raw financials.

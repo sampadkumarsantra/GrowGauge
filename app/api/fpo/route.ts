@@ -5,6 +5,8 @@ import { validateFPOSubmission } from '@/lib/validation';
 import { getAuthSession } from '@/lib/auth';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const body: FPOSubmissionInput = await req.json();

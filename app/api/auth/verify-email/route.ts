@@ -4,6 +4,8 @@ import { consumeAuthToken } from '@/lib/token';
 import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
 import { getRequestIp } from '@/lib/mail';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const token = req.nextUrl.searchParams.get('token') ?? '';

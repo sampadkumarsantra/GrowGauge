@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getAuthSession } from '@/lib/auth';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     // Facilitator records are now consolidated into User accounts. Creating a

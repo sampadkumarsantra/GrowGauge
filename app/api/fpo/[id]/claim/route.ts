@@ -4,6 +4,8 @@ import { getAuthSession } from '@/lib/auth';
 import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
 import { getRequestIp } from '@/lib/mail';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getAuthSession();

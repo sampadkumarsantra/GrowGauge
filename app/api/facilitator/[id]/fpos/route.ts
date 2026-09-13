@@ -12,6 +12,8 @@ interface RouteContext {
  * Authorizes via the facilitator's legacy accessToken (?token=...), or via a
  * logged-in session linked to that facilitator account.
  */
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = params;

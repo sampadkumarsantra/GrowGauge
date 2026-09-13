@@ -9,6 +9,8 @@ interface RouteContext {
   params: { id: string };
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = params;

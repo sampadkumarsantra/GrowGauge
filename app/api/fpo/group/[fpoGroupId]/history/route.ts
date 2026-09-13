@@ -13,6 +13,8 @@ interface RouteContext {
  * OR via a logged-in session that owns any submission in the group.
  * Returns only aggregate score data (no raw financials).
  */
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
     const { fpoGroupId } = params;
