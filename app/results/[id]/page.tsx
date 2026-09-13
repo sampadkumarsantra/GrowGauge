@@ -599,42 +599,40 @@ function Results() {
         </div>
       </section>
 
-      {/* ── 1b · Save-to-account banner (legacy token links only) ── */}
+      {/* ── 1b · Ownership banner (legacy token links only) ── */}
       {token && submissionMeta && !submissionMeta.userId && (
-        <section className="mt-6 sheet-tint px-5 sm:px-6 py-4">
+        <section className="mt-6 border-2 border-indigo bg-indigo-tint px-5 sm:px-6 py-5 rounded-sm">
           {!me ? (
-            <p className="text-[13px] text-ink-soft leading-relaxed">
-              This link works on its own — nothing needs an account. But if you assess FPOs
-              regularly, saving this scorecard to an account keeps it on your dashboard instead of
-              in a bookmark.{' '}
+            <p className="text-[14px] text-ink-soft leading-relaxed">
+              This scorecard isn&apos;t linked to an account.{' '}
               <Link
                 href={`/login?callbackUrl=${encodeURIComponent(`/results/${id}?token=${encodeURIComponent(token)}`)}`}
-                className="font-semibold"
+                className="font-semibold text-indigo"
               >
-                Log in to save it
-              </Link>
+                Log in or sign up
+              </Link>{' '}
+              to save it permanently and see it on your dashboard.
             </p>
           ) : submissionMeta.ownerEmail &&
             me.email.toLowerCase() === (submissionMeta.ownerEmail || '').toLowerCase() ? (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <p className="text-[13px] text-ink-soft leading-relaxed flex-1 min-w-[220px]">
-                This scorecard was created before you had an account. Save it so it stays on your
-                dashboard permanently.
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+              <p className="text-[14px] text-ink leading-relaxed flex-1 min-w-[220px]">
+                <strong>This scorecard isn&apos;t linked to an account yet.</strong> Save it
+                permanently and it will appear on your dashboard.
               </p>
               <button type="button" onClick={handleClaim} disabled={claiming} className="btn btn-primary">
-                {claiming ? 'Saving…' : 'Save this scorecard to my account'}
+                {claiming ? 'Saving…' : 'Save to my dashboard'}
               </button>
             </div>
           ) : (
-            <p className="text-[13px] text-ink-soft leading-relaxed">
-              This scorecard isn&apos;t linked to an account yet. To save it to yours, it needs to
-              carry the same email ({me.email}) — or{' '}
-              <Link
-                href={`/login?callbackUrl=${encodeURIComponent(`/results/${id}?token=${encodeURIComponent(token)}`)}`}
-                className="font-semibold"
-              >
-                sign in with the account you used at assessment time
-              </Link>.
+            <p className="text-[14px] text-ink leading-relaxed">
+              This scorecard isn&apos;t linked to an account yet.{' '}
+              <strong>
+                Log in or sign up with the email{' '}
+                {me.email}
+              </strong>{' '}
+              — the account that matches the email on this scorecard — to save it permanently to
+              your dashboard.
             </p>
           )}
         </section>

@@ -2,19 +2,31 @@
 
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Field } from '@/components/ui/field';
 
-export default function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
+export default function LoginForm({
+  googleEnabled,
+  initialCallbackUrl = '/dashboard',
+  initialError = null,
+}: {
+  googleEnabled: boolean;
+  initialCallbackUrl?: string;
+  initialError?: string | null;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [errorParam, setErrorParam] = useState<string | null>(null);
+  const [errorParam, setErrorParam] = useState<string | null>(initialError);
 
-  const callbackUrl = '/dashboard';
+  const callbackUrl = initialCallbackUrl;
+
+  useEffect(() => {
+    if (initialError) setErrorParam(initialError);
+  }, [initialError]);
 
   const urlError = (key: string | null): string | null => {
     if (!key) return null;

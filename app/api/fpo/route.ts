@@ -9,6 +9,15 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    // Login-first (§4): every new submission must belong to an account.
+    const session = await getAuthSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized: please log in to submit an assessment.' },
+        { status: 401 }
+      );
+    }
+
     const body: FPOSubmissionInput = await req.json();
 
     const validation = validateFPOSubmission(body);
@@ -38,10 +47,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // A logged-in user automatically owns what they submit; anonymous submissions
-    // remain claimable later from their private link (see POST /api/fpo/:id/claim).
-    const session = await getAuthSession();
-    const userId = session?.user.id ?? null;
+    // A logged-in user automatically owns what they submit (login is now
+    // required above, so every new submission carries a userId).
+    const userId = session.user.id;
 
     const submission = await prisma.fPOSubmission.create({
       data: {

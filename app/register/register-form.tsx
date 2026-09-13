@@ -4,8 +4,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Field } from '@/components/ui/field';
 
-export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
-  const callbackUrl = '/dashboard';
+export default function RegisterForm({
+  googleEnabled,
+  initialCallbackUrl = '/dashboard',
+}: {
+  googleEnabled: boolean;
+  initialCallbackUrl?: string;
+}) {
+  const callbackUrl = initialCallbackUrl;
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
