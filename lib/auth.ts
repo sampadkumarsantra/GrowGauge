@@ -2,10 +2,10 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/password';
 import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
+import { decryptSessionToken, sessionCookieName } from '@/lib/session-cookie';
 
 // The AUTH_SECRET that signs and verifies the session cookie. It MUST be stable
 // across redeploys and instances, so it comes from your host env. When unset we
@@ -13,7 +13,7 @@ import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
 // an explicitly-insecure fallback and warning loudly — every page still works,
 // but sessions reset on the next deploy. Set AUTH_SECRET on the host to get
 // stable sessions.
-import { createHash, randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 
 const AUTH_SECRET_RAW = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
 
@@ -215,43 +215,26 @@ export async function getAuthSession(): Promise<AuthSession | null> {
 
 // ─── Cookie-based JWT session decoding ──────────────────────────────────────
 // Avoids `getServerSession`, which reads `headers()` and forces routes into a
-// DynamicServerError state during static generation. We replicate the
-// next-auth JWT strategy: decode the session cookie with the same secret.
-
-const SESSION_COOKIE_PREFIX = process.env.NEXTAUTH_COOKIE_PREFIX ?? 'next-auth';
-const SECURE_COOKIE =
-  process.env.NEXTAUTH_URL?.startsWith('https://') || process.env.AUTH_URL?.startsWith('https://');
-
-function sessionCookieName(): string {
-  const securePrefix = SECURE_COOKIE ? '__Secure-' : '';
-  return `${securePrefix}${SESSION_COOKIE_PREFIX}.session-token`;
-}
-
-async function joseSecret(): Promise<Uint8Array> {
-  return new TextEncoder().encode(AUTH_SECRET);
-}
+// DynamicServerError state during static generation. We decrypt the next-auth
+// JWE session cookie using the same HKDF-derived encryption key that next-auth
+// uses when encoding (see lib/session-cookie.ts).
 
 async function getSessionFromCookie(): Promise<AuthSession | null> {
   const cookieStore = cookies();
   const token = cookieStore.get(sessionCookieName())?.value;
   if (!token) return null;
 
-  try {
-    const { payload } = await jwtVerify(token, await joseSecret(), {
-      algorithms: ['HS256'],
-    });
-    if (typeof payload.sub !== 'string' || !payload.sub) return null;
-    return {
-      user: {
-        id: payload.sub,
-        email: (payload.email as string) ?? '',
-        role: (payload.role as string) ?? 'fpo_rep',
-        emailVerified: Boolean(payload.emailVerified),
-        name: (payload.name as string | null) ?? null,
-        organization: (payload.organization as string | null) ?? null,
-      } satisfies AuthSessionUser,
-    };
-  } catch {
-    return null;
-  }
+  const payload = await decryptSessionToken(token, AUTH_SECRET);
+  if (!payload) return null;
+
+  return {
+    user: {
+      id: payload.sub,
+      email: payload.email ?? '',
+      role: payload.role ?? 'fpo_rep',
+      emailVerified: Boolean(payload.emailVerified),
+      name: payload.name ?? null,
+      organization: payload.organization ?? null,
+    } satisfies AuthSessionUser,
+  };
 }

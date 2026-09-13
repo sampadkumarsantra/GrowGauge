@@ -1,31 +1,38 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
+import { decryptSessionToken, sessionCookieName } from '@/lib/session-cookie';
 
-// The default jose algorithm check is stricter than next-auth's decode() —
-// next-auth signs session cookies with HS256, so pin that.
-const SESSION_COOKIE_PREFIX = process.env.NEXTAUTH_COOKIE_PREFIX ?? 'next-auth';
-const SECURE_COOKIE =
-  process.env.NEXTAUTH_URL?.startsWith('https://') || process.env.AUTH_URL?.startsWith('https://');
+async function getAuthSecret(): Promise<string> {
+  const raw = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
+  if (raw.length >= 32) return raw;
 
-function sessionCookieName(): string {
-  const securePrefix = SECURE_COOKIE ? '__Secure-' : '';
-  return `${securePrefix}${SESSION_COOKIE_PREFIX}.session-token`;
+  // Derive the same per-build fallback secret that lib/auth.ts uses,
+  // so middleware stays in sync with next-auth even when env secret is
+  // missing or short. Uses WebCrypto (available in both edge and Node).
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const data = new TextEncoder().encode(
+      'growgauge.fallback.' +
+        (process.env.VERCEL_GIT_COMMIT_SHA || '') +
+        (process.env.NEXT_PUBLIC_APP_URL || '') +
+        (process.env.AUTH_URL || '') +
+        (process.env.NEXTAUTH_URL || '')
+    );
+    const buf = await crypto.subtle.digest('SHA-256', data);
+    let bin = '';
+    const bytes = new Uint8Array(buf);
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+  return '';
 }
 
 async function decodeSessionCookie(cookie?: string): Promise<boolean> {
   if (!cookie) return false;
-  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
+  const secret = await getAuthSecret();
   if (!secret) return false;
-  try {
-    const { payload } = await jwtVerify(cookie, new TextEncoder().encode(secret), {
-      algorithms: ['HS256'],
-    });
-    if (typeof payload.sub === 'string' && payload.sub.length > 0) return true;
-    // 'jti'+exp are always present; verify nothing else. Reject on any decode error.
-    return false;
-  } catch {
-    return false;
-  }
+  return (await decryptSessionToken(cookie, secret)) !== null;
 }
 
 // Paths exempt from the login gate. Everything else redirects to /login.

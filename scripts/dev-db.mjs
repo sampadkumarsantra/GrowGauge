@@ -1,4 +1,5 @@
 import EmbeddedPostgres from 'embedded-postgres';
+import { execSync } from 'node:child_process';
 
 const PORT = Number(process.env.PG_PORT || 5432);
 const DB_DIR = process.env.PG_DATA_DIR || '.growgauge-pg';
@@ -15,10 +16,17 @@ const pg = new EmbeddedPostgres({
   persistent: true,
 });
 
+function applyMigrations() {
+  console.log('[dev-db] Applying database migrations...');
+  execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+  console.log('[dev-db] Database schema is up to date.');
+}
+
 async function main() {
   await pg.initialise();
   await pg.start();
   await pg.createDatabase(DB_NAME);
+  applyMigrations();
   console.log(`[dev-db] Postgres ready on localhost:${PORT} (db=${DB_NAME}, user=${USER})`);
   console.log('[dev-db] Press Ctrl+C to stop.');
 }
