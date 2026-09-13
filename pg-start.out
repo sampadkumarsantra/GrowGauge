@@ -40,3 +40,27 @@ ok
 performing post-bootstrap initialization ... 
 ok
 syncing data to disk ... 
+ok
+
+
+Success. You can now start the database server using:
+
+    ^"C^:^\Users^\sampa^\Downloads^\GrowGauge^\node^_modules^\^@embedded^-postgres^\windows^-x64^\native^\bin^\pg^_ctl^" -D .growgauge-pg -l logfile start
+
+
+2026-09-13 22:08:22.061 IST [8248] LOG:  starting PostgreSQL 18.4 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit
+
+2026-09-13 22:08:22.084 IST [8248] LOG:  listening on IPv6 address "::1", port 5432
+
+2026-09-13 22:08:22.084 IST [8248] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+
+2026-09-13 22:08:22.278 IST [5880] LOG:  database system was shut down at 2026-09-13 22:08:13 IST
+
+2026-09-13 22:08:22.304 IST [8248] LOG:  database system is ready to accept connections
+
+[dev-db] Postgres ready on localhost:5432 (db=growgauge, user=user)
+[dev-db] Press Ctrl+C to stop.
+2026-09-13 22:13:22.273 IST [11932] LOG:  checkpoint starting: time
+
+2026-09-13 22:15:12.367 IST [11932] LOG:  checkpoint complete: wrote 1020 buffers (6.2%), wrote 3 SLRU buffers; 1 WAL file(s) added, 0 removed, 0 recycled; write=109.594 s, sync=0.378 s, total=110.095 s; sync files=312, longest=0.007 s, average=0.002 s; distance=4916 kB, estimate=4916 kB; lsn=0/1CBE8B8, redo lsn=0/1CBE828
+
