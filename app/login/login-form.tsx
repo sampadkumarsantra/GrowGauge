@@ -12,7 +12,7 @@ function urlError(key: string | null): string | null {
   if (!key) return null;
   const known: Record<string, string> = {
     Configuration:
-      'Sign-in failed. The server is not configured for sign-in (a secret is missing). Please try again shortly.',
+      'Sign-in failed. The server is missing its AUTH_SECRET environment variable. Set AUTH_SECRET in your host (Vercel → Settings → Environment Variables) and redeploy.',
     AccessDenied: 'Sign-in was denied by your account.',
     Verification: 'The sign-in link has expired. Sign in again.',
     OAuthAccountNotLinked: 'An account with this email already exists. Log in with email and password.',
@@ -28,6 +28,16 @@ function urlError(key: string | null): string | null {
       'An account already exists for this email. Sign in with your email and password instead.',
   };
   return known[key] ?? 'Sign-in failed. Please try again.';
+}
+
+async function reportAuthConfig() {
+  try {
+    const res = await fetch('/api/auth/config-check', { cache: 'no-store' });
+    const data = await res.json().catch(() => null);
+    console.error('[login] server auth config:', data);
+  } catch {
+    console.error('[login] could not reach /api/auth/config-check');
+  }
 }
 
 export default function LoginForm({
@@ -63,6 +73,7 @@ export default function LoginForm({
       });
       if (result?.error) {
         console.error('[login] next-auth error', result.error, { status: result.status });
+        if (result.error === 'Configuration') void reportAuthConfig();
         setError(urlError(result.error) ?? 'Sign-in failed. Please try again.');
       } else if (result?.ok) {
         router.push(initialCallbackUrl);
