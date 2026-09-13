@@ -7,7 +7,15 @@ import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/password';
 import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
 
-export const AUTH_SECRET = process.env.AUTH_SECRET;
+const AUTH_SECRET_RAW = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
+
+if (AUTH_SECRET_RAW.length < 32) {
+  throw new Error(
+    '[GrowGauge] AUTH_SECRET is missing or too short on this server. Set AUTH_SECRET (a random string of 32+ chars) in your host environment (e.g. Vercel Settings → Environment Variables) and redeploy.'
+  );
+}
+
+export const AUTH_SECRET = AUTH_SECRET_RAW;
 
 export interface AuthSessionUser {
   id: string;
@@ -202,13 +210,7 @@ function sessionCookieName(): string {
 }
 
 async function joseSecret(): Promise<Uint8Array> {
-  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
-  if (!secret) {
-    // Unit-testing/dev convenience: a stable error is better than a random
-    // per-boot secret that would invalidate every cookie on restart.
-    throw new Error('AUTH_SECRET is not set. Set AUTH_SECRET (or NEXTAUTH_SECRET) in your environment.');
-  }
-  return new TextEncoder().encode(secret);
+  return new TextEncoder().encode(AUTH_SECRET);
 }
 
 async function getSessionFromCookie(): Promise<AuthSession | null> {
