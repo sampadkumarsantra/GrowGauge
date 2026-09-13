@@ -9,6 +9,7 @@ const nextConfig = {
     serverComponentsExternalPackages: [
       '@react-pdf/renderer',
       'next-auth',
+      'jose',
       '@prisma/client',
       'prisma',
       'bcryptjs',

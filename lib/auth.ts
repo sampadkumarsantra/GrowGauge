@@ -1,7 +1,8 @@
 import { NextAuthOptions } from 'next-auth';
-import { getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/password';
 import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
@@ -158,7 +159,7 @@ export const authOptions: NextAuthOptions = {
 };
 
 export async function getAuthSession(): Promise<AuthSession | null> {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFromCookie();
   if (!session?.user) return null;
   const user = session.user as any;
   const id = (user.id ?? user.sub) as string | undefined;
@@ -174,4 +175,53 @@ export async function getAuthSession(): Promise<AuthSession | null> {
       organization: (user.organization as string) ?? null,
     } satisfies AuthSessionUser,
   };
+}
+
+// ─── Cookie-based JWT session decoding ──────────────────────────────────────
+// Avoids `getServerSession`, which reads `headers()` and forces routes into a
+// DynamicServerError state during static generation. We replicate the
+// next-auth JWT strategy: decode the session cookie with the same secret.
+
+const SESSION_COOKIE_PREFIX = process.env.NEXTAUTH_COOKIE_PREFIX ?? 'next-auth';
+const SECURE_COOKIE =
+  process.env.NEXTAUTH_URL?.startsWith('https://') || process.env.AUTH_URL?.startsWith('https://');
+
+function sessionCookieName(): string {
+  const securePrefix = SECURE_COOKIE ? '__Secure-' : '';
+  return `${securePrefix}${SESSION_COOKIE_PREFIX}.session-token`;
+}
+
+async function joseSecret(): Promise<Uint8Array> {
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
+  if (!secret) {
+    // Unit-testing/dev convenience: a stable error is better than a random
+    // per-boot secret that would invalidate every cookie on restart.
+    throw new Error('AUTH_SECRET is not set. Set AUTH_SECRET (or NEXTAUTH_SECRET) in your environment.');
+  }
+  return new TextEncoder().encode(secret);
+}
+
+async function getSessionFromCookie(): Promise<AuthSession | null> {
+  const cookieStore = cookies();
+  const token = cookieStore.get(sessionCookieName())?.value;
+  if (!token) return null;
+
+  try {
+    const { payload } = await jwtVerify(token, await joseSecret(), {
+      algorithms: ['HS256'],
+    });
+    if (typeof payload.sub !== 'string' || !payload.sub) return null;
+    return {
+      user: {
+        id: payload.sub,
+        email: (payload.email as string) ?? '',
+        role: (payload.role as string) ?? 'fpo_rep',
+        emailVerified: Boolean(payload.emailVerified),
+        name: (payload.name as string | null) ?? null,
+        organization: (payload.organization as string | null) ?? null,
+      } satisfies AuthSessionUser,
+    };
+  } catch {
+    return null;
+  }
 }
