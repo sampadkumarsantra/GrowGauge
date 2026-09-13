@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { renderToBuffer, DocumentProps } from '@react-pdf/renderer';
 import { ScorecardPdfDocument } from '@/components/report/ScorecardPdfDocument';
 import { getChecklistItems } from '@/lib/checklist';
+import { getAuthSession } from '@/lib/auth';
 
 interface RouteContext {
   params: { id: string };
@@ -16,13 +17,6 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const { id } = params;
     const token = req.nextUrl.searchParams.get('token');
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized: accessToken is required as query parameter (?token=...)' },
-        { status: 401 }
-      );
-    }
-
     const submission = await prisma.fPOSubmission.findUnique({
       where: { id },
       include: { scoreResult: true },
@@ -32,8 +26,15 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'FPO submission not found' }, { status: 404 });
     }
 
-    if (submission.accessToken !== token) {
-      return NextResponse.json({ error: 'Forbidden: Invalid access token' }, { status: 403 });
+    const session = await getAuthSession();
+    const isOwner = Boolean(session?.user && submission.userId === session.user.id);
+    const tokenValid = Boolean(token && submission.accessToken === token);
+
+    if (!isOwner && !tokenValid) {
+      return NextResponse.json(
+        { error: 'Unauthorized: accessToken is required as query parameter (?token=...)' },
+        { status: token ? 403 : 401 }
+      );
     }
 
     if (!submission.scoreResult) {

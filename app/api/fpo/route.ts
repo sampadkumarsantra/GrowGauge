@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateScore, FPOSubmissionInput } from '@/lib/scoring';
 import { validateFPOSubmission } from '@/lib/validation';
+import { getAuthSession } from '@/lib/auth';
 import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
@@ -35,9 +36,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // A logged-in user automatically owns what they submit; anonymous submissions
+    // remain claimable later from their private link (see POST /api/fpo/:id/claim).
+    const session = await getAuthSession();
+    const userId = session?.user.id ?? null;
+
     const submission = await prisma.fPOSubmission.create({
       data: {
         accessToken,
+        userId,
         fpoGroupId: body.fpoGroupId || crypto.randomUUID(),
         fpoName: body.fpoName.trim(),
         state: body.state.trim(),

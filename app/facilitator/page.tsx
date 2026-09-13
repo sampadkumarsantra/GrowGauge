@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Field, TextInput } from '@/components/ui/field';
+
+interface MePayload {
+  user?: { id: string; email: string; role: string };
+}
 
 export default function FacilitatorCreatePage() {
   const router = useRouter();
@@ -10,6 +15,35 @@ export default function FacilitatorCreatePage() {
   const [organization, setOrganization] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [me, setMe] = useState<MePayload | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/user/me');
+        if (res.ok) {
+          const data = await res.json();
+          setMe(data);
+          if (data.user?.role === 'facilitator') {
+            const facRes = await fetch('/api/facilitator/me');
+            if (facRes.ok) {
+              const fac = await facRes.json();
+              if (fac.facilitatorId) {
+                router.push(`/facilitator/${fac.facilitatorId}`);
+                return;
+              }
+            }
+          }
+        }
+      } catch {
+        /* not signed in */
+      } finally {
+        setChecking(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +70,12 @@ export default function FacilitatorCreatePage() {
     }
   };
 
+  if (checking) {
+    return <div className="min-h-[40vh] text-center text-ink-soft text-sm pt-16">Loading…</div>;
+  }
+
+  const loggedIn = Boolean(me?.user);
+
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 py-14">
       <header className="space-y-2 mb-8">
@@ -48,6 +88,20 @@ export default function FacilitatorCreatePage() {
           follow their credit-readiness over time.
         </p>
       </header>
+
+      {!loggedIn && (
+        <div className="mb-6 sheet-tint px-5 sm:px-6 py-4 text-[13px] text-ink-soft leading-relaxed">
+          Dashboard accounts now need a GrowGauge login so your referral data stays with your
+          organisation across sessions. Already registered?{' '}
+          <Link href="/login?callbackUrl=/facilitator" className="font-semibold">
+            Log in
+          </Link>{' '}
+          — then return here to create a dashboard.{' '}
+          <Link href="/register" className="font-semibold">
+            Create an account
+          </Link>
+        </div>
+      )}
 
       <div className="sheet px-5 sm:px-8 py-6">
         <form onSubmit={handleCreate} className="space-y-5">
@@ -79,8 +133,9 @@ export default function FacilitatorCreatePage() {
         </form>
 
         <p className="text-[12px] text-ink-mute mt-6 leading-relaxed">
-          No password needed. Your dashboard is secured with a private access token embedded in
-          its link — treat it like a password. Share only the assessment-invite link with FPOs.
+          {loggedIn
+            ? 'Your dashboard is linked to your account, and also keeps its private access-token link for quick sharing.'
+            : 'No password is needed. Your dashboard is secured with a private access token embedded in its link — treat it like a password.'}
         </p>
       </div>
     </div>

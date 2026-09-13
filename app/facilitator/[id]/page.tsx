@@ -40,18 +40,44 @@ function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
+  const [needLogin, setNeedLogin] = useState(false);
 
-  const inviteUrl =
-    typeof window !== 'undefined' ? `${window.location.origin}/assess?facilitatorId=${id}` : '';
+  const inviteUrl = data
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/assess?facilitatorId=${data.facilitatorId}`
+    : '';
 
   const loadData = useCallback(async () => {
-    if (!id || !token) {
-      setError('Missing facilitator ID or access token. Please check your dashboard link.');
+    if (!id) {
+      setError('Missing facilitator ID. Please check your dashboard link.');
       setLoading(false);
       return;
     }
+
+    if (token) {
+      try {
+        const res = await fetch(`/api/facilitator/${id}/fpos?token=${token}`);
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Failed to load dashboard');
+        }
+        setData(await res.json());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // No token in the URL: the facilitator is expected to be logged in.
     try {
-      const res = await fetch(`/api/facilitator/${id}/fpos?token=${token}`);
+      const res = await fetch(`/api/facilitator/${id}/fpos`);
+      if (res.status === 401) {
+        setNeedLogin(true);
+        setError('Log in to open your facilitator dashboard.');
+        setLoading(false);
+        return;
+      }
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || 'Failed to load dashboard');
@@ -85,9 +111,20 @@ function Dashboard() {
       <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
         <h1 className="font-slab text-2xl font-semibold text-ink">Dashboard access error</h1>
         <p className="text-sm text-ink-soft leading-relaxed">{error}</p>
-        <Link href="/facilitator" className="btn-link">
-          Create a dashboard
-        </Link>
+        {needLogin ? (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link href="/login" className="btn btn-primary">
+              Log in
+            </Link>
+            <Link href="/register" className="btn btn-quiet">
+              Create an account
+            </Link>
+          </div>
+        ) : (
+          <Link href="/facilitator" className="btn-link">
+            Create a dashboard
+          </Link>
+        )}
       </div>
     );
   }

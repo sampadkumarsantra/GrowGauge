@@ -6,7 +6,14 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    serverComponentsExternalPackages: ['@react-pdf/renderer'],
+    serverComponentsExternalPackages: [
+      '@react-pdf/renderer',
+      'next-auth',
+      '@prisma/client',
+      'prisma',
+      'bcryptjs',
+      'nodemailer',
+    ],
   },
 };
 

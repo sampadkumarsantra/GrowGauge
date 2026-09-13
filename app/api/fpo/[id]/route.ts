@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateScore, FPOSubmissionInput } from '@/lib/scoring';
 import { validateFPOSubmission } from '@/lib/validation';
+import { getAccessToken, loadAuthorizedSubmission } from '@/lib/api-helpers';
+import { getAuthSession } from '@/lib/auth';
 
 interface RouteContext {
   params: { id: string };
@@ -10,27 +12,14 @@ interface RouteContext {
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = params;
-    const token = req.nextUrl.searchParams.get('token');
+    const token = getAccessToken(req);
+    const result = await loadAuthorizedSubmission(id, token);
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized: accessToken is required as query parameter (?token=...)' },
-        { status: 401 }
-      );
+    if (result.status !== null) {
+      return NextResponse.json(result.body, { status: result.status });
     }
 
-    const submission = await prisma.fPOSubmission.findUnique({
-      where: { id },
-      include: { scoreResult: true },
-    });
-
-    if (!submission) {
-      return NextResponse.json({ error: 'FPO submission not found' }, { status: 404 });
-    }
-
-    if (submission.accessToken !== token) {
-      return NextResponse.json({ error: 'Forbidden: Invalid access token' }, { status: 403 });
-    }
+    const submission = result.submission;
 
     let parsedProducts = [];
     try {
@@ -46,9 +35,21 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       parsedSuggestions = [];
     }
 
+    const session = await getAuthSession();
+    const currentUserId = session?.user.id ?? null;
+    const claimable = (() => {
+      if (!session) return false;
+      if (submission.userId) return submission.userId === currentUserId;
+      if (!session.user.emailVerified) return false;
+      if (!submission.email) return false;
+      return submission.email.trim().toLowerCase() === session.user.email;
+    })();
+
     return NextResponse.json({
       id: submission.id,
       accessToken: submission.accessToken,
+      userId: submission.userId,
+      claimable,
       fpoName: submission.fpoName,
       state: submission.state,
       district: submission.district,
@@ -102,27 +103,14 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = params;
-    const token = req.nextUrl.searchParams.get('token');
+    const token = getAccessToken(req);
+    const result = await loadAuthorizedSubmission(id, token);
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized: accessToken is required as query parameter (?token=...)' },
-        { status: 401 }
-      );
+    if (result.status !== null) {
+      return NextResponse.json(result.body, { status: result.status });
     }
 
-    const existing = await prisma.fPOSubmission.findUnique({
-      where: { id },
-      include: { scoreResult: true },
-    });
-
-    if (!existing) {
-      return NextResponse.json({ error: 'FPO submission not found' }, { status: 404 });
-    }
-
-    if (existing.accessToken !== token) {
-      return NextResponse.json({ error: 'Forbidden: Invalid access token' }, { status: 403 });
-    }
+    const existing = result.submission;
 
     const updates: Partial<FPOSubmissionInput> = await req.json();
 

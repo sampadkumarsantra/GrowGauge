@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from './prisma';
+import { getAuthSession } from './auth';
 import { FPOSubmissionInput } from './scoring';
 
 export interface AuthorizedResult {
@@ -18,17 +19,18 @@ export function getAccessToken(req: NextRequest): string | null {
   return req.nextUrl.searchParams.get('token');
 }
 
+/**
+ * Loads a submission authorized by (in order of preference):
+ *  1. a logged-in session whose user owns the submission, or
+ *  2. the legacy private access token (?token=...).
+ *
+ * The no-login access-token path is fully preserved.
+ */
 export async function loadAuthorizedSubmission(
   id: string,
   token: string | null
 ): Promise<AuthorizedResult | UnauthorizedResult> {
-  if (!token) {
-    return {
-      status: 401,
-      body: { error: 'Unauthorized: accessToken is required as query parameter (?token=...)' },
-    };
-  }
-
+  const session = await getAuthSession();
   const submission = await prisma.fPOSubmission.findUnique({
     where: { id },
     include: { scoreResult: true },
@@ -38,11 +40,22 @@ export async function loadAuthorizedSubmission(
     return { status: 404, body: { error: 'FPO submission not found' } };
   }
 
-  if (submission.accessToken !== token) {
-    return { status: 403, body: { error: 'Forbidden: Invalid access token' } };
+  if (session?.user && submission.userId === session.user.id) {
+    return { status: null, submission };
   }
 
-  return { status: null, submission };
+  if (token && submission.accessToken === token) {
+    return { status: null, submission };
+  }
+
+  if (!token) {
+    return {
+      status: 401,
+      body: { error: 'Unauthorized: accessToken is required as query parameter (?token=...)' },
+    };
+  }
+
+  return { status: 403, body: { error: 'Forbidden: Invalid access token' } };
 }
 
 export function hydrateSubmission(

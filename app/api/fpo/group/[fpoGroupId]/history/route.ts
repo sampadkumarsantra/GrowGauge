@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAccessToken } from '@/lib/api-helpers';
+import { getAuthSession } from '@/lib/auth';
 
 interface RouteContext {
   params: { fpoGroupId: string };
@@ -8,20 +9,14 @@ interface RouteContext {
 
 /**
  * Score history for "the same" FPO across assessment cycles, keyed by fpoGroupId.
- * Requires a valid accessToken belonging to any submission in the group, and
- * returns only aggregate score data (no raw financials).
+ * Authorizes via a valid accessToken belonging to any submission in the group,
+ * OR via a logged-in session that owns any submission in the group.
+ * Returns only aggregate score data (no raw financials).
  */
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
     const { fpoGroupId } = params;
     const token = getAccessToken(req);
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized: accessToken is required as query parameter (?token=...)' },
-        { status: 401 }
-      );
-    }
 
     const submissions = await prisma.fPOSubmission.findMany({
       where: { fpoGroupId },
@@ -33,8 +28,13 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'No submissions found for this FPO group' }, { status: 404 });
     }
 
+    const session = await getAuthSession();
+    const isOwner = Boolean(
+      session?.user && submissions.some((s) => s.userId === session.user.id)
+    );
     const hasValidToken = submissions.some((s) => s.accessToken === token);
-    if (!hasValidToken) {
+
+    if (!isOwner && !hasValidToken) {
       return NextResponse.json({ error: 'Forbidden: Invalid access token' }, { status: 403 });
     }
 

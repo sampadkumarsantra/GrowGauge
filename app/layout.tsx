@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Link from 'next/link';
 import { GrowGaugeMark } from '@/components/ui/growgauge-mark';
+import { NavHeader } from '@/components/ui/nav-header';
+import { getAuthSession } from '@/lib/auth';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://growgauge.in'),
@@ -35,7 +37,9 @@ const NAV_LINKS = [
   { href: '/about', label: 'Methodology' },
 ];
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getAuthSession();
+
   return (
     <html lang="en">
       <head>
@@ -59,21 +63,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
 
             <nav className="flex items-center gap-1 sm:gap-2">
-              {NAV_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="hidden sm:inline-flex px-3 py-1.5 text-[13px] font-medium text-paper/75 no-underline hover:text-paper hover:underline hover:decoration-paper/60 hover:decoration-2 hover:underline-offset-4"
-                >
-                  {label}
-                </Link>
-              ))}
-              <Link
-                href="/assess"
-                className="inline-flex items-center px-3.5 py-1.5 text-[13px] font-semibold text-paper border border-paper/40 rounded-[2px] no-underline hover:bg-paper/10 hover:text-paper"
-              >
-                Start assessment
-              </Link>
+              <NavHeader
+                session={session
+                  ? {
+                      id: session.user.id,
+                      email: session.user.email,
+                      role: session.user.role,
+                      emailVerified: session.user.emailVerified,
+                      name: session.user.name,
+                      organization: session.user.organization,
+                    }
+                  : null}
+              />
             </nav>
           </div>
         </header>
@@ -101,6 +102,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {[
                   { href: '/', label: 'Home' },
                   { href: '/assess', label: 'Assess an FPO' },
+                  { href: '/dashboard', label: 'My dashboard' },
                   { href: '/leaderboard', label: 'District leaderboard' },
                   { href: '/research', label: 'Researcher dataset' },
                   { href: '/facilitator', label: 'Facilitator dashboard' },

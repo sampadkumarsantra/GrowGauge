@@ -93,9 +93,19 @@ function Results() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const [me, setMe] = useState<{ id: string; emailVerified: boolean; email: string } | null>(null);
+  const [claimMsg, setClaimMsg] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
+
   const [savedData, setSavedData] = useState<{
     submission: FPOSubmissionInput & { id: string; fpoGroupId?: string | null };
     scoreResult: ScoreResult;
+  } | null>(null);
+
+  const [submissionMeta, setSubmissionMeta] = useState<{
+    userId: string | null;
+    claimable: boolean;
+    ownerEmail?: string | null;
   } | null>(null);
 
   const [simulatedValues, setSimulatedValues] = useState({
@@ -133,19 +143,37 @@ function Results() {
   // ── Mount: load everything ──
   useEffect(() => {
     (async () => {
-      if (!id || !token) {
-        setError('Missing submission ID or access token in the URL. Check your link.');
+      if (!id) {
+        setError('Missing submission ID in the URL. Check your link.');
         setLoading(false);
         return;
       }
+
+      const qs = token ? `?token=${encodeURIComponent(token)}` : '';
+
+      const currentUser = await fetch('/api/user/me')
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      setMe(currentUser?.user ?? null);
+
       let data: any;
       try {
-        const res = await fetch(`/api/fpo/${id}?token=${token}`);
+        const res = await fetch(`/api/fpo/${id}${qs}`);
         if (!res.ok) {
           const errData = await res.json();
-          throw new Error(errData.error || 'Failed to load scorecard');
+          throw new Error(
+            errData.error ||
+              (token
+                ? 'Failed to load scorecard'
+                : 'Log in to see this scorecard, or open it from the email where you saved the link.')
+          );
         }
         data = await res.json();
+        setSubmissionMeta({
+          userId: data.userId ?? null,
+          claimable: Boolean(data.claimable),
+          ownerEmail: data.email ?? null,
+        });
         setSavedData({ submission: data, scoreResult: data.scoreResult });
         setSimulatedValues({
           activeMembers: data.activeMembers,
@@ -164,7 +192,7 @@ function Results() {
 
       // Roadmap
       try {
-        const r = await fetch(`/api/fpo/${id}/roadmap?token=${token}`);
+        const r = await fetch(`/api/fpo/${id}/roadmap${qs}`);
         if (r.ok) {
           const d = await r.json();
           setRoadmapItems(d.items ?? []);
@@ -175,7 +203,7 @@ function Results() {
 
       // Schemes
       try {
-        const r = await fetch(`/api/fpo/${id}/schemes?token=${token}`);
+        const r = await fetch(`/api/fpo/${id}/schemes${qs}`);
         if (r.ok) {
           const d = await r.json();
           setSchemes(d.schemes ?? []);
@@ -186,7 +214,7 @@ function Results() {
 
       // Lenders
       try {
-        const r = await fetch(`/api/fpo/${id}/lenders?token=${token}`);
+        const r = await fetch(`/api/fpo/${id}/lenders${qs}`);
         if (r.ok) {
           const d = await r.json();
           setLenders(d.lenders ?? []);
@@ -197,7 +225,7 @@ function Results() {
 
       // Checklist
       try {
-        const r = await fetch(`/api/fpo/${id}/checklist?token=${token}`);
+        const r = await fetch(`/api/fpo/${id}/checklist${qs}`);
         if (r.ok) {
           const d = await r.json();
           setChecklist(d.items ?? []);
@@ -209,7 +237,7 @@ function Results() {
       // History
       if (data.fpoGroupId) {
         try {
-          const r = await fetch(`/api/fpo/group/${data.fpoGroupId}/history?token=${token}`);
+          const r = await fetch(`/api/fpo/group/${data.fpoGroupId}/history${qs}`);
           if (r.ok) {
             const d = await r.json();
             setHistory(d.history ?? []);
@@ -352,6 +380,28 @@ function Results() {
     } catch {
       setSaveError('Failed to start a new assessment cycle. Please try again.');
       setNewCycleLoading(false);
+    }
+  };
+
+  // ── Claim to account ──
+  const handleClaim = async () => {
+    if (!id || claiming) return;
+    setClaiming(true);
+    setSaveMessage(null);
+    setSaveError(null);
+    try {
+      const suffix = token ? `?token=${encodeURIComponent(token)}` : '';
+      const res = await fetch(`/api/fpo/${id}/claim${suffix}`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error ?? 'Could not save this scorecard to your account.');
+      }
+      setClaimMsg(data.message ?? 'Scorecard saved to your account.');
+      setSubmissionMeta((prev) => (prev ? { ...prev, userId: me?.id ?? null, claimable: false } : prev));
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save this scorecard.');
+    } finally {
+      setClaiming(false);
     }
   };
 
@@ -533,7 +583,7 @@ function Results() {
           <button type="button" onClick={copyShareLink} className="btn-link">
             {copiedLink ? 'Private link copied' : 'Copy private link'}
           </button>
-          <a href={`/api/fpo/${id}/report?token=${token}`} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-indigo hover:text-indigo-soft no-underline hover:underline hover:underline-offset-4">
+          <a href={token ? `/api/fpo/${id}/report?token=${encodeURIComponent(token)}` : `/api/fpo/${id}/report`} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-indigo hover:text-indigo-soft no-underline hover:underline hover:underline-offset-4">
             <Download className="w-3.5 h-3.5" />
             Download the PDF report
           </a>
@@ -548,6 +598,52 @@ function Results() {
           </button>
         </div>
       </section>
+
+      {/* ── 1b · Save-to-account banner (legacy token links only) ── */}
+      {token && submissionMeta && !submissionMeta.userId && (
+        <section className="mt-6 sheet-tint px-5 sm:px-6 py-4">
+          {!me ? (
+            <p className="text-[13px] text-ink-soft leading-relaxed">
+              This link works on its own — nothing needs an account. But if you assess FPOs
+              regularly, saving this scorecard to an account keeps it on your dashboard instead of
+              in a bookmark.{' '}
+              <Link
+                href={`/login?callbackUrl=${encodeURIComponent(`/results/${id}?token=${encodeURIComponent(token)}`)}`}
+                className="font-semibold"
+              >
+                Log in to save it
+              </Link>
+            </p>
+          ) : submissionMeta.ownerEmail &&
+            me.email.toLowerCase() === (submissionMeta.ownerEmail || '').toLowerCase() ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p className="text-[13px] text-ink-soft leading-relaxed flex-1 min-w-[220px]">
+                This scorecard was created before you had an account. Save it so it stays on your
+                dashboard permanently.
+              </p>
+              <button type="button" onClick={handleClaim} disabled={claiming} className="btn btn-primary">
+                {claiming ? 'Saving…' : 'Save this scorecard to my account'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-[13px] text-ink-soft leading-relaxed">
+              This scorecard isn&apos;t linked to an account yet. To save it to yours, it needs to
+              carry the same email ({me.email}) — or{' '}
+              <Link
+                href={`/login?callbackUrl=${encodeURIComponent(`/results/${id}?token=${encodeURIComponent(token)}`)}`}
+                className="font-semibold"
+              >
+                sign in with the account you used at assessment time
+              </Link>.
+            </p>
+          )}
+        </section>
+      )}
+      {claimMsg && (
+        <section className="mt-6 sheet px-5 sm:px-6 py-4 border-l-4 border-current border-leaf text-[13px] text-leaf">
+          {claimMsg} <Link href="/dashboard" className="font-semibold">Open your dashboard</Link>.
+        </section>
+      )}
 
       {/* ── 2 · Factor ledger with inline what-if sliders ── */}
       <section className="mt-10">

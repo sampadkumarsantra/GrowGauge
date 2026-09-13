@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAccessToken } from '@/lib/api-helpers';
+import { getAuthSession } from '@/lib/auth';
 
 interface RouteContext {
   params: { id: string };
@@ -8,23 +9,25 @@ interface RouteContext {
 
 /**
  * Returns all FPOs referred through this facilitator, with their scores.
- * Requires the facilitator's accessToken as the `?token=` query parameter.
+ * Authorizes via the facilitator's legacy accessToken (?token=...), or via a
+ * logged-in session linked to that facilitator account.
  */
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = params;
     const token = getAccessToken(req);
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized: facilitator accessToken is required as query parameter (?token=...)' },
-        { status: 401 }
-      );
-    }
-
     const facilitator = await prisma.facilitator.findUnique({ where: { id } });
 
-    if (!facilitator || facilitator.accessToken !== token) {
+    if (!facilitator) {
+      return NextResponse.json({ error: 'Facilitator not found' }, { status: 404 });
+    }
+
+    const session = await getAuthSession();
+    const sessionIsLinked = Boolean(session?.user && facilitator.userAccountId === session.user.id);
+    const tokenValid = Boolean(token && facilitator.accessToken === token);
+
+    if (!sessionIsLinked && !tokenValid) {
       return NextResponse.json({ error: 'Forbidden: Invalid facilitator access token' }, { status: 403 });
     }
 
