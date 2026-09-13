@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getAuthSession } from '@/lib/auth';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    // Facilitator records are now consolidated into User accounts. Creating a
-    // dashboard the legacy way still works, and a logged-in user gets the
-    // record linked to their account so the same data is available on /dashboard
-    // and via session auth.
-    const session = await getAuthSession();
-    const currentUserId = session?.user.id ?? null;
-
     const body = await req.json();
     const name = typeof body.name === 'string' ? body.name.trim() : '';
     const organization = typeof body.organization === 'string' ? body.organization.trim() : '';
@@ -32,17 +24,8 @@ export async function POST(req: NextRequest) {
         name,
         organization,
         accessToken,
-        userAccountId: currentUserId,
-        email: session?.user.email ?? null,
       },
     });
-
-    if (currentUserId && session?.user.role === 'fpo_rep') {
-      await prisma.user.update({
-        where: { id: currentUserId },
-        data: { role: 'facilitator' },
-      });
-    }
 
     return NextResponse.json(
       {

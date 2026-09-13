@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAccessToken } from '@/lib/api-helpers';
-import { getAuthSession } from '@/lib/auth';
 
 interface RouteContext {
   params: { fpoGroupId: string };
@@ -9,8 +8,7 @@ interface RouteContext {
 
 /**
  * Score history for "the same" FPO across assessment cycles, keyed by fpoGroupId.
- * Authorizes via a valid accessToken belonging to any submission in the group,
- * OR via a logged-in session that owns any submission in the group.
+ * Authorizes via a valid accessToken belonging to any submission in the group.
  * Returns only aggregate score data (no raw financials).
  */
 export const dynamic = 'force-dynamic';
@@ -30,13 +28,9 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'No submissions found for this FPO group' }, { status: 404 });
     }
 
-    const session = await getAuthSession();
-    const isOwner = Boolean(
-      session?.user && submissions.some((s) => s.userId === session.user.id)
-    );
     const hasValidToken = submissions.some((s) => s.accessToken === token);
 
-    if (!isOwner && !hasValidToken) {
+    if (!hasValidToken) {
       return NextResponse.json({ error: 'Forbidden: Invalid access token' }, { status: 403 });
     }
 

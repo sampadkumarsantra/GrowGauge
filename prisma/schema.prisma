@@ -7,12 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  fpo_rep
-  facilitator
-  admin
-}
-
 model FPOSubmission {
   id                           String        @id @default(uuid())
   accessToken                  String        @unique
@@ -39,18 +33,14 @@ model FPOSubmission {
   email                        String?
   optedIntoLeaderboard         Boolean       @default(false)
   facilitatorId                String?
-  userId                       String?
-  claimedAt                    DateTime?
   createdAt                    DateTime      @default(now())
   updatedAt                    DateTime      @updatedAt
   facilitator                  Facilitator?  @relation(fields: [facilitatorId], references: [id], onDelete: SetNull)
-  owner                        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   roadmapItems                 RoadmapItem[]
   scoreResult                  ScoreResult?
 
   @@index([fpoGroupId])
   @@index([facilitatorId])
-  @@index([userId])
   @@index([state, district, optedIntoLeaderboard])
 }
 
@@ -93,87 +83,13 @@ model LenderTypeReference {
 }
 
 model Facilitator {
-  id           String          @id @default(uuid())
+  id           String        @id @default(uuid())
   name         String
   organization String
-  accessToken  String          @unique
-  email        String?
-  userAccountId String?        @unique
-  user         User?           @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+  accessToken  String        @unique
   submissions  FPOSubmission[]
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-}
-
-model User {
-  id              String          @id @default(uuid())
-  email           String          @unique
-  passwordHash    String?
-  googleId        String?         @unique
-  role            UserRole        @default(fpo_rep)
-  name            String?
-  organization    String?
-  emailVerified   Boolean         @default(false)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  lastLoginAt     DateTime?
-  submissions     FPOSubmission[]
-  facilitator     Facilitator?
-  accounts        Account[]
-  sessions        Session[]
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model AuthToken {
-  id        String   @id @default(uuid())
-  tokenHash String   @unique
-  kind      String
-  email     String
-  expiresAt DateTime
-  consumed  Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  @@index([email, kind])
-  @@index([kind])
-}
-
-model AuthAttempt {
-  id           String   @id @default(uuid())
-  email        String
-  kind         String
-  windowStart  DateTime @default(now())
-  count        Int      @default(1)
-  lastAttemptAt DateTime @default(now())
-
-  @@unique([email, kind])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model ScoreResult {

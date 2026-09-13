@@ -3,7 +3,6 @@ import './globals.css';
 import Link from 'next/link';
 import { GrowGaugeMark } from '@/components/ui/growgauge-mark';
 import { NavHeader } from '@/components/ui/nav-header';
-import { getAuthSession } from '@/lib/auth';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://growgauge.in'),
@@ -38,8 +37,6 @@ const NAV_LINKS = [
 ];
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getAuthSession();
-
   return (
     <html lang="en">
       <head>
@@ -63,18 +60,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
 
             <nav className="flex items-center gap-1 sm:gap-2">
-              <NavHeader
-                session={session
-                  ? {
-                      id: session.user.id,
-                      email: session.user.email,
-                      role: session.user.role,
-                      emailVerified: session.user.emailVerified,
-                      name: session.user.name,
-                      organization: session.user.organization,
-                    }
-                  : null}
-              />
+              <NavHeader />
             </nav>
           </div>
         </header>
@@ -102,7 +88,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 {[
                   { href: '/', label: 'Home' },
                   { href: '/assess', label: 'Assess an FPO' },
-                  { href: '/dashboard', label: 'My dashboard' },
                   { href: '/leaderboard', label: 'District leaderboard' },
                   { href: '/research', label: 'Researcher dataset' },
                   { href: '/facilitator', label: 'Facilitator dashboard' },

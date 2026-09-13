@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma';
 import { calculateScore, FPOSubmissionInput } from '@/lib/scoring';
 import { validateFPOSubmission } from '@/lib/validation';
 import { getAccessToken, loadAuthorizedSubmission } from '@/lib/api-helpers';
-import { getAuthSession } from '@/lib/auth';
 
 interface RouteContext {
   params: { id: string };
@@ -37,21 +36,9 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       parsedSuggestions = [];
     }
 
-    const session = await getAuthSession();
-    const currentUserId = session?.user.id ?? null;
-    const claimable = (() => {
-      if (!session) return false;
-      if (submission.userId) return submission.userId === currentUserId;
-      if (!session.user.emailVerified) return false;
-      if (!submission.email) return false;
-      return submission.email.trim().toLowerCase() === session.user.email;
-    })();
-
     return NextResponse.json({
       id: submission.id,
       accessToken: submission.accessToken,
-      userId: submission.userId,
-      claimable,
       fpoName: submission.fpoName,
       state: submission.state,
       district: submission.district,

@@ -93,19 +93,9 @@ function Results() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [me, setMe] = useState<{ id: string; emailVerified: boolean; email: string } | null>(null);
-  const [claimMsg, setClaimMsg] = useState<string | null>(null);
-  const [claiming, setClaiming] = useState(false);
-
   const [savedData, setSavedData] = useState<{
     submission: FPOSubmissionInput & { id: string; fpoGroupId?: string | null };
     scoreResult: ScoreResult;
-  } | null>(null);
-
-  const [submissionMeta, setSubmissionMeta] = useState<{
-    userId: string | null;
-    claimable: boolean;
-    ownerEmail?: string | null;
   } | null>(null);
 
   const [simulatedValues, setSimulatedValues] = useState({
@@ -151,29 +141,16 @@ function Results() {
 
       const qs = token ? `?token=${encodeURIComponent(token)}` : '';
 
-      const currentUser = await fetch('/api/user/me')
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      setMe(currentUser?.user ?? null);
-
       let data: any;
       try {
         const res = await fetch(`/api/fpo/${id}${qs}`);
         if (!res.ok) {
           const errData = await res.json();
           throw new Error(
-            errData.error ||
-              (token
-                ? 'Failed to load scorecard'
-                : 'Log in to see this scorecard, or open it from the email where you saved the link.')
+            errData.error || 'Failed to load scorecard. Open it from the link where you saved it.'
           );
         }
         data = await res.json();
-        setSubmissionMeta({
-          userId: data.userId ?? null,
-          claimable: Boolean(data.claimable),
-          ownerEmail: data.email ?? null,
-        });
         setSavedData({ submission: data, scoreResult: data.scoreResult });
         setSimulatedValues({
           activeMembers: data.activeMembers,
@@ -383,28 +360,6 @@ function Results() {
     }
   };
 
-  // ── Claim to account ──
-  const handleClaim = async () => {
-    if (!id || claiming) return;
-    setClaiming(true);
-    setSaveMessage(null);
-    setSaveError(null);
-    try {
-      const suffix = token ? `?token=${encodeURIComponent(token)}` : '';
-      const res = await fetch(`/api/fpo/${id}/claim${suffix}`, { method: 'POST' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error ?? 'Could not save this scorecard to your account.');
-      }
-      setClaimMsg(data.message ?? 'Scorecard saved to your account.');
-      setSubmissionMeta((prev) => (prev ? { ...prev, userId: me?.id ?? null, claimable: false } : prev));
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Could not save this scorecard.');
-    } finally {
-      setClaiming(false);
-    }
-  };
-
   // ── Copy links ──
   const copyShareLink = () => {
     if (typeof window !== 'undefined') {
@@ -598,50 +553,6 @@ function Results() {
           </button>
         </div>
       </section>
-
-      {/* ── 1b · Ownership banner (legacy token links only) ── */}
-      {token && submissionMeta && !submissionMeta.userId && (
-        <section className="mt-6 border-2 border-indigo bg-indigo-tint px-5 sm:px-6 py-5 rounded-sm">
-          {!me ? (
-            <p className="text-[14px] text-ink-soft leading-relaxed">
-              This scorecard isn&apos;t linked to an account.{' '}
-              <Link
-                href={`/login?callbackUrl=${encodeURIComponent(`/results/${id}?token=${encodeURIComponent(token)}`)}`}
-                className="font-semibold text-indigo"
-              >
-                Log in or sign up
-              </Link>{' '}
-              to save it permanently and see it on your dashboard.
-            </p>
-          ) : submissionMeta.ownerEmail &&
-            me.email.toLowerCase() === (submissionMeta.ownerEmail || '').toLowerCase() ? (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-              <p className="text-[14px] text-ink leading-relaxed flex-1 min-w-[220px]">
-                <strong>This scorecard isn&apos;t linked to an account yet.</strong> Save it
-                permanently and it will appear on your dashboard.
-              </p>
-              <button type="button" onClick={handleClaim} disabled={claiming} className="btn btn-primary">
-                {claiming ? 'Saving…' : 'Save to my dashboard'}
-              </button>
-            </div>
-          ) : (
-            <p className="text-[14px] text-ink leading-relaxed">
-              This scorecard isn&apos;t linked to an account yet.{' '}
-              <strong>
-                Log in or sign up with the email{' '}
-                {me.email}
-              </strong>{' '}
-              — the account that matches the email on this scorecard — to save it permanently to
-              your dashboard.
-            </p>
-          )}
-        </section>
-      )}
-      {claimMsg && (
-        <section className="mt-6 sheet px-5 sm:px-6 py-4 border-l-4 border-current border-leaf text-[13px] text-leaf">
-          {claimMsg} <Link href="/dashboard" className="font-semibold">Open your dashboard</Link>.
-        </section>
-      )}
 
       {/* ── 2 · Factor ledger with inline what-if sliders ── */}
       <section className="mt-10">

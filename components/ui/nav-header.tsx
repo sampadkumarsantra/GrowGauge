@@ -2,16 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-
-export interface NavHeaderSessionUser {
-  id: string;
-  email: string;
-  role: string;
-  emailVerified: boolean;
-  name: string | null;
-  organization: string | null;
-}
 
 const NAV_LINKS = [
   { href: '/assess', label: 'Assess', desktop: true },
@@ -20,11 +10,7 @@ const NAV_LINKS = [
   { href: '/about', label: 'Methodology', desktop: true },
 ];
 
-export function NavHeader({ session }: { session: NavHeaderSessionUser | null }) {
-  const searchParams = useSearchParams();
-  const callbackUrl =
-    searchParams.get('callbackUrl') ?? '/dashboard';
-
+export function NavHeader() {
   return (
     <nav className="flex items-center gap-1 sm:gap-2">
       {NAV_LINKS.map(({ href, label, desktop }) => (
@@ -38,38 +24,6 @@ export function NavHeader({ session }: { session: NavHeaderSessionUser | null })
           {label}
         </Link>
       ))}
-
-      {session ? (
-        <>
-          <Link
-            href="/dashboard"
-            className="inline-flex px-3 py-1.5 text-[13px] font-semibold text-paper no-underline hover:underline hover:decoration-paper/60 hover:underline-offset-4"
-          >
-            Dashboard
-          </Link>
-          <a
-            href="/api/auth/signout?callbackUrl=/login?signout=1"
-            className="inline-flex px-2 py-1.5 text-[13px] font-semibold text-paper/70 no-underline hover:text-paper hover:underline hover:decoration-paper/60 hover:underline-offset-4"
-          >
-            Sign out
-          </a>
-        </>
-      ) : (
-        <>
-          <Link
-            href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-            className="inline-flex px-3 py-1.5 text-[13px] font-semibold text-paper no-underline hover:underline hover:decoration-paper/60 hover:underline-offset-4"
-          >
-            Log in
-          </Link>
-          <Link
-            href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-            className="inline-flex px-3.5 py-1.5 text-[13px] font-semibold text-paper border border-paper/40 rounded-[2px] no-underline hover:bg-paper/10 hover:text-paper"
-          >
-            Sign up
-          </Link>
-        </>
-      )}
 
       <Link
         href="/assess"

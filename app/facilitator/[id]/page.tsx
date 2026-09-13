@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 interface FPOEntry {
@@ -33,7 +33,6 @@ const BAND_TEXT: Record<string, string> = {
 function Dashboard() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const id = params.id as string;
   const token = searchParams.get('token');
 
@@ -41,11 +40,6 @@ function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
-  const [needLogin, setNeedLogin] = useState(false);
-  const [canLink, setCanLink] = useState(false);
-  const [linking, setLinking] = useState(false);
-  const [linkMessage, setLinkMessage] = useState<string | null>(null);
-  const [linkError, setLinkError] = useState<string | null>(null);
 
   const inviteUrl = data
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/assess?facilitatorId=${data.facilitatorId}`
@@ -58,40 +52,16 @@ function Dashboard() {
       return;
     }
 
-    if (token) {
-      try {
-        const res = await fetch(`/api/facilitator/${id}/fpos?token=${token}`);
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Failed to load dashboard');
-        }
-        const payload = await res.json();
-        setData(payload);
-
-        // If the visitor is logged in but this facilitator isn't linked to an
-        // account yet, offer to link it (login-first §1 transition path).
-        const meRes = await fetch('/api/user/me').catch(() => null);
-        if (meRes?.ok) {
-          const me = await meRes.json().catch(() => null);
-          if (me?.user && me.user.emailVerified) setCanLink(true);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load dashboard');
-      } finally {
-        setLoading(false);
-      }
+    if (!token) {
+      setError(
+        'This dashboard link is missing its access token. Check that the full link (including the ?token= part) copied correctly.'
+      );
+      setLoading(false);
       return;
     }
 
-    // No token in the URL: the facilitator is expected to be logged in.
     try {
-      const res = await fetch(`/api/facilitator/${id}/fpos`);
-      if (res.status === 401) {
-        setNeedLogin(true);
-        setError('Log in to open your facilitator dashboard.');
-        setLoading(false);
-        return;
-      }
+      const res = await fetch(`/api/facilitator/${id}/fpos?token=${token}`);
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || 'Failed to load dashboard');
@@ -107,27 +77,6 @@ function Dashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const linkDashboard = async () => {
-    if (!id || !token || linking) return;
-    setLinking(true);
-    setLinkError(null);
-    setLinkMessage(null);
-    try {
-      const res = await fetch(`/api/facilitator/${id}/link?token=${encodeURIComponent(token)}`, {
-        method: 'POST',
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? 'Could not link this dashboard to your account.');
-      setLinkMessage(body.message ?? 'Dashboard linked to your account.');
-      setCanLink(false);
-      router.refresh();
-    } catch (err) {
-      setLinkError(err instanceof Error ? err.message : 'Could not link this dashboard.');
-    } finally {
-      setLinking(false);
-    }
-  };
 
   const copyInvite = () => {
     if (navigator.clipboard) {
@@ -146,20 +95,9 @@ function Dashboard() {
       <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
         <h1 className="font-slab text-2xl font-semibold text-ink">Dashboard access error</h1>
         <p className="text-sm text-ink-soft leading-relaxed">{error}</p>
-        {needLogin ? (
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/login" className="btn btn-primary">
-              Log in
-            </Link>
-            <Link href="/register" className="btn btn-quiet">
-              Create an account
-            </Link>
-          </div>
-        ) : (
-          <Link href="/facilitator" className="btn-link">
-            Create a dashboard
-          </Link>
-        )}
+        <Link href="/facilitator" className="btn-link">
+          Create a dashboard
+        </Link>
       </div>
     );
   }
@@ -179,27 +117,6 @@ function Dashboard() {
           <strong className="font-semibold text-ink">{data.assessedCount}</strong> assessed
         </p>
       </header>
-
-      {canLink && (
-        <section className="mt-6 border-2 border-indigo bg-indigo-tint px-5 sm:px-6 py-5 rounded-sm">
-          <p className="text-[14px] text-ink leading-relaxed">
-            <strong>This dashboard isn&apos;t linked to your account yet.</strong>{' '}
-            Link it once and it appears on your dashboard, with no link required next time.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <button
-              type="button"
-              onClick={linkDashboard}
-              disabled={linking}
-              className="btn btn-primary"
-            >
-              {linking ? 'Linking…' : 'Link this dashboard to my account'}
-            </button>
-            {linkMessage && <span className="text-[13px] font-semibold text-leaf">{linkMessage}</span>}
-            {linkError && <span className="text-[13px] text-clay">{linkError}</span>}
-          </div>
-        </section>
-      )}
 
       {/* Invite link — plain text + quiet copy */}
       <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">

@@ -84,3 +84,30 @@ Success. You can now start the database server using:
 
 2026-09-13 22:53:23.182 IST [11932] LOG:  checkpoint complete: wrote 5 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.567 s, sync=0.010 s, total=0.601 s; sync files=6, longest=0.003 s, average=0.002 s; distance=22 kB, estimate=4068 kB; lsn=0/1DACD90, redo lsn=0/1DACD38
 
+2026-09-13 23:17:05.416 IST [8704] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-09-13 23:21:26.562 IST [11932] LOG:  checkpoint starting: immediate force wait
+
+2026-09-13 23:21:26.621 IST [11932] LOG:  checkpoint complete: wrote 5 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 1 recycled; write=0.017 s, sync=0.011 s, total=0.059 s; sync files=6, longest=0.003 s, average=0.002 s; distance=5090 kB, estimate=5090 kB; lsn=0/22A5848, redo lsn=0/22A57F0
+
+2026-09-13 23:21:28.435 IST [11932] LOG:  checkpoint starting: immediate force wait
+
+2026-09-13 23:21:28.518 IST [11932] LOG:  checkpoint complete: wrote 29 buffers (0.2%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.033 s, sync=0.033 s, total=0.083 s; sync files=17, longest=0.005 s, average=0.002 s; distance=5245 kB, estimate=5245 kB; lsn=0/27C4D68, redo lsn=0/27C4D10
+
+2026-09-13 23:21:43.815 IST [11932] LOG:  checkpoint starting: immediate force wait
+
+2026-09-13 23:21:43.869 IST [11932] LOG:  checkpoint complete: wrote 9 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.019 s, sync=0.016 s, total=0.055 s; sync files=10, longest=0.003 s, average=0.002 s; distance=5099 kB, estimate=5230 kB; lsn=0/2CBFBE0, redo lsn=0/2CBFB88
+
+2026-09-13 23:21:45.534 IST [11932] LOG:  checkpoint starting: immediate force wait
+
+2026-09-13 23:21:45.583 IST [11932] LOG:  checkpoint complete: wrote 3 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 1 recycled; write=0.014 s, sync=0.007 s, total=0.049 s; sync files=4, longest=0.003 s, average=0.002 s; distance=5082 kB, estimate=5215 kB; lsn=0/31B6550, redo lsn=0/31B64F8
+
+2026-09-13 23:22:28.034 IST [11932] LOG:  checkpoint starting: immediate force wait
+
+2026-09-13 23:22:28.076 IST [11932] LOG:  checkpoint complete: wrote 6 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.014 s, sync=0.010 s, total=0.043 s; sync files=7, longest=0.003 s, average=0.002 s; distance=5084 kB, estimate=5202 kB; lsn=0/36AD5A8, redo lsn=0/36AD550
+
+2026-09-13 23:22:29.757 IST [11932] LOG:  checkpoint starting: immediate force wait
+
+2026-09-13 23:22:29.788 IST [11932] LOG:  checkpoint complete: wrote 3 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.009 s, sync=0.006 s, total=0.031 s; sync files=4, longest=0.003 s, average=0.002 s; distance=5082 kB, estimate=5190 kB; lsn=0/3BA4120, redo lsn=0/3BA40C8
+

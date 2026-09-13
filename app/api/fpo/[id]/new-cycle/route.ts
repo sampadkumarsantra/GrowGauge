@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAccessToken, hydrateSubmission, loadAuthorizedSubmission } from '@/lib/api-helpers';
-import { getAuthSession } from '@/lib/auth';
 import { calculateScore } from '@/lib/scoring';
 import crypto from 'crypto';
 
@@ -29,16 +28,10 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const scoreResult = calculateScore(input);
     const accessToken = crypto.randomBytes(24).toString('hex');
 
-    // Login-first (§2): a new cycle is a new submission and must be owned by an
-    // account. Fall back to the original row's userId (already-owned cycles);
-    // this route is unreachable without a session (global middleware).
-    const session = await getAuthSession();
-    const userId = session?.user.id ?? existing.userId;
-
+    // A new cycle is a new anonymous submission secured by its own access token.
     const created = await prisma.fPOSubmission.create({
       data: {
         accessToken,
-        userId,
         fpoGroupId: existing.fpoGroupId || crypto.randomUUID(),
         fpoName: existing.fpoName,
         state: existing.state,

@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { prisma } from './prisma';
-import { getAuthSession } from './auth';
 import { FPOSubmissionInput } from './scoring';
 
 export interface AuthorizedResult {
@@ -20,17 +19,14 @@ export function getAccessToken(req: NextRequest): string | null {
 }
 
 /**
- * Loads a submission authorized by (in order of preference):
- *  1. a logged-in session whose user owns the submission, or
- *  2. the legacy private access token (?token=...).
- *
- * The no-login access-token path is fully preserved.
+ * Loads a submission authorized by its private access token (?token=...).
+ * This is the only authorization path now that accounts are not used: the
+ * scorecard link (with its embedded token) is the proof of access.
  */
 export async function loadAuthorizedSubmission(
   id: string,
   token: string | null
 ): Promise<AuthorizedResult | UnauthorizedResult> {
-  const session = await getAuthSession();
   const submission = await prisma.fPOSubmission.findUnique({
     where: { id },
     include: { scoreResult: true },
@@ -38,10 +34,6 @@ export async function loadAuthorizedSubmission(
 
   if (!submission) {
     return { status: 404, body: { error: 'FPO submission not found' } };
-  }
-
-  if (session?.user && submission.userId === session.user.id) {
-    return { status: null, submission };
   }
 
   if (token && submission.accessToken === token) {

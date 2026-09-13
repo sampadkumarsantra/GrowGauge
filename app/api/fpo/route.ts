@@ -2,22 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { calculateScore, FPOSubmissionInput } from '@/lib/scoring';
 import { validateFPOSubmission } from '@/lib/validation';
-import { getAuthSession } from '@/lib/auth';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    // Login-first (§4): every new submission must belong to an account.
-    const session = await getAuthSession();
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized: please log in to submit an assessment.' },
-        { status: 401 }
-      );
-    }
-
     const body: FPOSubmissionInput = await req.json();
 
     const validation = validateFPOSubmission(body);
@@ -47,14 +37,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // A logged-in user automatically owns what they submit (login is now
-    // required above, so every new submission carries a userId).
-    const userId = session.user.id;
-
+    // No account needed: access to the scorecard is the private access token
+    // embedded in the share link.
     const submission = await prisma.fPOSubmission.create({
       data: {
         accessToken,
-        userId,
         fpoGroupId: body.fpoGroupId || crypto.randomUUID(),
         fpoName: body.fpoName.trim(),
         state: body.state.trim(),
