@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
+    "dev:db": "node scripts/dev-db.mjs",
     "build": "node -e \"if (process.env.DATABASE_URL) { require('child_process').execSync('npx prisma migrate deploy', { stdio: 'inherit' }) } else { console.warn('[build] DATABASE_URL not set - skipping prisma migrate deploy') }\" && next build",
     "start": "next start",
     "lint": "next lint",
@@ -36,11 +37,15 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
+    "embedded-postgres": "^18.4.0-beta.17",
     "postcss": "^8.5.1",
     "prisma": "^6.3.1",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.13",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
+  },
+  "allowScripts": {
+    "@embedded-postgres/windows-x64@18.4.0-beta.17": true
   }
 }
