@@ -11,8 +11,19 @@ import AuthShell from '@/components/ui/auth-shell';
 function urlError(key: string | null): string | null {
   if (!key) return null;
   const known: Record<string, string> = {
+    Configuration:
+      'Sign-in failed. The server is not configured for sign-in (a secret is missing). Please try again shortly.',
+    AccessDenied: 'Sign-in was denied by your account.',
+    Verification: 'The sign-in link has expired. Sign in again.',
+    OAuthAccountNotLinked: 'An account with this email already exists. Log in with email and password.',
+    OAuthSignin: 'Sign-in with Google did not complete. Please try again.',
+    OAuthCallback: 'Google sign-in failed. Please try again.',
+    OAuthCreateAccount: 'Could not create your Google account. Please try again.',
+    EmailCreateAccount: 'Could not create your account. Please try again.',
+    Callback: 'Sign-in failed. Please try again.',
     AuthError: 'The email or password you entered is incorrect.',
-    CredentialsSignin: 'The email or password you entered is incorrect.',
+    CredentialsSignin:
+      'The email or password is incorrect. If you just signed up, check your inbox and verify your email first.',
     AccountExistsSignin:
       'An account already exists for this email. Sign in with your email and password instead.',
   };
@@ -51,11 +62,13 @@ export default function LoginForm({
         callbackUrl: initialCallbackUrl,
       });
       if (result?.error) {
+        console.error('[login] next-auth error', result.error, { status: result.status });
         setError(urlError(result.error) ?? 'Sign-in failed. Please try again.');
       } else if (result?.ok) {
         router.push(initialCallbackUrl);
         router.refresh();
       } else {
+        console.error('[login] next-auth non-ok without error', result);
         setError('Sign-in failed. Please try again.');
       }
     } catch {

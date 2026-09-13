@@ -60,14 +60,24 @@ export const authOptions: NextAuthOptions = {
           RATE_LIMITS.LOGIN.window,
           false
         );
-        if (alreadyLimited) return null;
+        if (alreadyLimited) {
+          console.warn(`[auth] rate-limited login attempt for ${email}`);
+          return null;
+        }
 
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
-        if (!user.passwordHash) return null;
+        if (!user) {
+          console.warn(`[auth] login: no user for ${email}`);
+          return null;
+        }
+        if (!user.passwordHash) {
+          console.warn(`[auth] login: no passwordHash for ${email}`);
+          return null;
+        }
 
         const ok = await verifyPassword(password, user.passwordHash);
         if (!ok) {
+          console.warn(`[auth] login: password mismatch for ${email}`);
           await isRateLimited(
             RATE_LIMITS.LOGIN.kind,
             email,
