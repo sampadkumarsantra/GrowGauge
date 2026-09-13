@@ -64,3 +64,23 @@ Success. You can now start the database server using:
 
 2026-09-13 22:15:12.367 IST [11932] LOG:  checkpoint complete: wrote 1020 buffers (6.2%), wrote 3 SLRU buffers; 1 WAL file(s) added, 0 removed, 0 recycled; write=109.594 s, sync=0.378 s, total=110.095 s; sync files=312, longest=0.007 s, average=0.002 s; distance=4916 kB, estimate=4916 kB; lsn=0/1CBE8B8, redo lsn=0/1CBE828
 
+2026-09-13 22:37:43.293 IST [10400] ERROR:  relation "_prisma_migrations" does not exist at character 126
+2026-09-13 22:37:43.293 IST [10400] STATEMENT:  SELECT "id", "checksum", "finished_at", "migration_name", "logs", "rolled_back_at", "started_at", "applied_steps_count" FROM "_prisma_migrations" ORDER BY "started_at" ASC
+
+2026-09-13 22:38:39.947 IST [18992] ERROR:  relation "User" does not exist at character 32
+2026-09-13 22:38:39.947 IST [18992] STATEMENT:  SELECT count(*)::int as n FROM "User"
+
+2026-09-13 22:38:40.000 IST [18992] ERROR:  relation "AuthAttempt" does not exist at character 43
+2026-09-13 22:38:40.000 IST [18992] STATEMENT:  SELECT email, count, "lastAttemptAt" FROM "AuthAttempt" ORDER BY "lastAttemptAt" DESC LIMIT 5
+
+2026-09-13 22:43:22.468 IST [11932] LOG:  checkpoint starting: time
+
+2026-09-13 22:43:40.552 IST [11932] LOG:  checkpoint complete: wrote 165 buffers (1.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=17.909 s, sync=0.153 s, total=18.085 s; sync files=122, longest=0.003 s, average=0.002 s; distance=931 kB, estimate=4518 kB; lsn=0/1DA7538, redo lsn=0/1DA74A8
+
+2026-09-13 22:49:19.134 IST [15412] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+
+2026-09-13 22:53:22.582 IST [11932] LOG:  checkpoint starting: time
+
+2026-09-13 22:53:23.182 IST [11932] LOG:  checkpoint complete: wrote 5 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.567 s, sync=0.010 s, total=0.601 s; sync files=6, longest=0.003 s, average=0.002 s; distance=22 kB, estimate=4068 kB; lsn=0/1DACD90, redo lsn=0/1DACD38
+
