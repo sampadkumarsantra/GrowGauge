@@ -7,15 +7,33 @@ import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/password';
 import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
 
+// The AUTH_SECRET that signs and verifies the session cookie. It MUST be stable
+// across redeploys and instances, so it comes from your host env. When unset we
+// still boot (so builds/deploys never hard-fail), deriving a per-build secret as
+// an explicitly-insecure fallback and warning loudly — every page still works,
+// but sessions reset on the next deploy. Set AUTH_SECRET on the host to get
+// stable sessions.
+import { createHash, randomBytes } from 'crypto';
+
 const AUTH_SECRET_RAW = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
 
+const derivedFallback = createHash('sha256')
+  .update(
+    'growgauge.fallback.' +
+      (process.env.VERCEL_GIT_COMMIT_SHA || '') +
+      (process.env.NEXT_PUBLIC_APP_URL || '') +
+      (process.env.AUTH_URL || '') +
+      (process.env.NEXTAUTH_URL || '')
+  )
+  .digest('base64');
+
+export const AUTH_SECRET = AUTH_SECRET_RAW.length >= 32 ? AUTH_SECRET_RAW : derivedFallback;
+
 if (AUTH_SECRET_RAW.length < 32) {
-  throw new Error(
-    '[GrowGauge] AUTH_SECRET is missing or too short on this server. Set AUTH_SECRET (a random string of 32+ chars) in your host environment (e.g. Vercel Settings → Environment Variables) and redeploy.'
+  console.warn(
+    '[GrowGauge] AUTH_SECRET is missing or too short on this server. Set AUTH_SECRET (a random 32+ char string) in your host environment (e.g. Vercel Settings → Environment Variables) for stable sessions. Using an insecure per-build fallback for now.'
   );
 }
-
-export const AUTH_SECRET = AUTH_SECRET_RAW;
 
 export interface AuthSessionUser {
   id: string;
