@@ -8,16 +8,17 @@ interface ScoreTargetProps {
 }
 
 const ZONES = [
-  { x: 0, w: 40, cls: 'zt-early', label: 'Early' },
+  { x: 0, w: 40, cls: 'zt-early', label: 'Early Stage' },
   { x: 40, w: 20, cls: 'zt-dev', label: 'Developing' },
-  { x: 60, w: 20, cls: 'zt-mod', label: 'Credit-eligible' },
-  { x: 80, w: 20, cls: 'zt-strong', label: 'Bank-ready' },
+  { x: 60, w: 20, cls: 'zt-mod', label: 'Moderate' },
+  { x: 80, w: 20, cls: 'zt-strong', label: 'Strong' },
 ] as const;
 
 /**
  * The GrowGauge target board: a 0–100 gauge with the credit-readiness band
- * zones and the 60 / 80 threshold ticks, plus a needle for the observed score.
- * The single motif that turns every score into "how far from target am I?".
+ * zones and the official band thresholds at 40 / 60 / 80, plus a needle for
+ * the observed score. Rendered on a solid white panel so it reads the same
+ * on paper sheets and tinted band surfaces.
  */
 export function ScoreTarget({ score, className }: ScoreTargetProps) {
   const clamped = score == null ? null : Math.max(0, Math.min(100, score));
@@ -27,9 +28,11 @@ export function ScoreTarget({ score, className }: ScoreTargetProps) {
   return (
     <div className={clsx('score-target', className)}>
       <svg viewBox="0 0 100 40" className="w-full h-auto" role="img" aria-label="Credit-readiness target gauge">
-        {ZONES.map((z) => (
-          <rect key={z.cls} x={z.x} y="16" width={z.w} height="8" rx="2" className={z.cls} />
-        ))}
+        <g className="zt-bar">
+          {ZONES.map((z) => (
+            <rect key={z.cls} x={z.x} y="16" width={z.w} height="8" rx="2" className={z.cls} />
+          ))}
+        </g>
         {[40, 60, 80].map((t) => (
           <g key={t}>
             <line x1={t} y1="14" x2={t} y2="26" className="zt-tick" />
@@ -58,7 +61,7 @@ export function ScoreTarget({ score, className }: ScoreTargetProps) {
       </svg>
       <div className="zt-labels">
         {ZONES.map((z) => (
-          <span key={z.cls} className="zt-label" style={{ left: `${z.x + z.w / 2}%` }}>
+          <span key={z.cls} className="zt-label" style={{ flexBasis: `${z.w}%` }}>
             {z.label}
           </span>
         ))}

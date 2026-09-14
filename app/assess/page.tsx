@@ -274,8 +274,8 @@ function AssessForm() {
             Step-by-step organisational assessment
           </h1>
           <p className="text-[12px] text-ink-mute mt-2">
-            Aim for <span className="font-semibold text-indigo">60+</span> = credit
-            eligible · <span className="font-semibold text-leaf">80+</span> = bank-ready
+            Aim for <span className="font-semibold text-indigo">60+ (Moderate)</span> = credit
+            eligible · <span className="font-semibold text-leaf">80+ (Strong)</span> = bank-ready
           </p>
         </div>
         <Button variant="quiet" type="button" onClick={loadSampleProfile} className="shrink-0 self-start">

@@ -89,9 +89,9 @@ export default async function DashboardPage() {
           <div className="max-w-md mx-auto mt-5 text-left">
             <ScoreTarget score={null} />
             <p className="mt-3 text-[12px] text-ink-mute text-center">
-              Score <span className="font-semibold text-indigo">60+</span> for
-              credit eligibility ·{' '}
-              <span className="font-semibold text-leaf">80+</span> for bank-ready
+              Aim for <span className="font-semibold text-indigo">60+ (Moderate)</span> to become
+              credit-eligible · <span className="font-semibold text-leaf">80+ (Strong)</span> to be
+              bank-ready
             </p>
           </div>
           <p className="mx-auto max-w-md mt-4 text-[14px] text-ink-soft leading-relaxed">
@@ -120,18 +120,30 @@ export default async function DashboardPage() {
                 <p className="mt-3 text-[13px] text-ink-soft leading-relaxed">
                   {gapToEligible != null && gapToEligible > 0 ? (
                     <>
-                      Your latest score is <span className="font-semibold text-ink">{latestScore.toFixed(1)}</span> —{' '}
-                      <span className="font-semibold text-clay">{gapToEligible.toFixed(1)}</span> point
-                      {gapToEligible < 1.9 && gapToEligible > 1.1 ? 's' : ''} below the{' '}
+                      Your latest score is{' '}
+                      <span className="font-semibold text-ink">{latestScore.toFixed(1)}</span> —{' '}
+                      {Math.abs(gapToEligible) === 1 ? (
+                        <span className="font-semibold text-clay">1 point</span>
+                      ) : (
+                        <span className="font-semibold text-clay">{gapToEligible.toFixed(1)} points</span>
+                      )}{' '}
+                      below the{' '}
                       <span className="font-semibold text-indigo">60-point credit-eligibility target</span>.
                     </>
                   ) : gapToEligible != null && gapToEligible <= 0 ? (
                     <>
-                      Your latest score is <span className="font-semibold text-ink">{latestScore.toFixed(1)}</span> — you&rsquo;re
+                      Your latest score of{' '}
+                      <span className="font-semibold text-ink">{latestScore.toFixed(1)}</span>{' '}
                       {latestScore >= 80 ? (
-                        <> <span className="font-semibold text-leaf">bank-ready</span> for lending partners.</>
+                        <>
+                          clears the <span className="font-semibold text-leaf">Strong (80+)</span> band — you&rsquo;re
+                          bank-ready for lending partners.
+                        </>
                       ) : (
-                        <> past the <span className="font-semibold text-indigo">credit-eligibility target</span>.</>
+                        <>
+                          clears the <span className="font-semibold text-indigo">Moderate (60+)</span> band — you&rsquo;re
+                          credit-eligible.
+                        </>
                       )}
                     </>
                   ) : null}

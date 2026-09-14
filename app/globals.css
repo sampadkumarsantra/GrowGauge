@@ -451,25 +451,28 @@ input[type='range']::-moz-range-thumb {
 /* ── Target board (goal-oriented gauge) ── */
 .score-target {
   width: 100%;
+  background: #fff;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.9rem 0.55rem;
 }
 .score-target svg {
   overflow: visible;
 }
 .zt-early {
-  fill: var(--clay);
-  opacity: 0.28;
+  fill: var(--clay-tint);
+  opacity: 0.85;
 }
 .zt-dev {
-  fill: #aeb4c4;
-  opacity: 0.35;
+  fill: var(--paper-deep);
 }
 .zt-mod {
-  fill: var(--indigo);
-  opacity: 0.32;
+  fill: var(--indigo-tint);
+  opacity: 0.8;
 }
 .zt-strong {
-  fill: var(--leaf);
-  opacity: 0.34;
+  fill: var(--leaf-tint);
+  opacity: 0.85;
 }
 .zt-tick {
   stroke: var(--ink);
@@ -498,16 +501,22 @@ input[type='range']::-moz-range-thumb {
   fill: var(--leaf);
 }
 .zt-labels {
-  position: relative;
-  height: 0;
+  display: flex;
+  width: 100%;
+  margin-top: 0.45rem;
 }
 .zt-label {
-  position: absolute;
-  top: 2px;
-  transform: translateX(-50%);
+  flex: none;
+  text-align: center;
   font-size: 0.5625rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--ink-mute);
   white-space: nowrap;
+}
+.zt-label:first-child {
+  text-align: left;
+}
+.zt-label:last-child {
+  text-align: right;
 }

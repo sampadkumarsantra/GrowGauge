@@ -513,10 +513,10 @@ function Results() {
 
   const distanceToTarget =
     activeScore.overallScore >= 80
-      ? `${(activeScore.overallScore - 80).toFixed(1)} pts above bank-ready · 80+`
+      ? `Above the Strong band (80+) — ${(activeScore.overallScore - 80).toFixed(1)} pt${activeScore.overallScore - 80 === 1 ? '' : 's'} to spare`
       : activeScore.overallScore >= 60
-        ? `${(activeScore.overallScore - 60).toFixed(1)} pts above credit-eligible · 60+`
-        : `${(60 - activeScore.overallScore).toFixed(1)} pts below credit-eligible · target 60`;
+        ? `${(60 - activeScore.overallScore).toFixed(1)} pt${activeScore.overallScore - 60 === 1 ? '' : 's'} above the Moderate band (60+)`
+        : `${(60 - activeScore.overallScore).toFixed(1)} pt${60 - activeScore.overallScore === 1 ? '' : 's'} below the Moderate band — target 60`;
 
   const roadmapGroups = ROADMAP_STAGES.map((stage) => ({
     stage,
@@ -573,7 +573,7 @@ function Results() {
           <div className="mt-6 max-w-md">
             <ScoreTarget score={activeScore.overallScore} />
             <p className="mt-2 text-[12px] text-ink-soft">
-              Distance to target: {distanceToTarget}
+              {activeScore.band === 'Strong' ? 'Band position:' : 'Distance to target:'} {distanceToTarget}
             </p>
           </div>
         </div>
