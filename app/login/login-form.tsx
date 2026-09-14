@@ -22,7 +22,7 @@ function urlError(key: string | null): string | null {
     Callback: 'Sign-in failed. Please try again.',
     AuthError: 'The email or password you entered is incorrect.',
     CredentialsSignin:
-      'The email or password is incorrect. If you just signed up, verify your email first.',
+      'The email or password is incorrect. Check that you typed them correctly — or reset your password below if you have forgotten it.',
     AccountExistsSignin:
       'An account already exists for this email. Sign in with your email and password instead.',
   };
