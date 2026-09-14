@@ -11,6 +11,7 @@ import { Button, buttonClass } from '@/components/ui/button';
 import { LedgerRow } from '@/components/ui/ledger-row';
 import { ChecklistItem as ChecklistItemRow } from '@/components/ui/checklist-item';
 import { ScoreHistoryChart } from '@/components/ui/line-chart';
+import { ScoreTarget } from '@/components/ui/score-target';
 import { AssistantPanel, AssistantMessage } from '@/components/ui/assistant-panel';
 import { Toast } from '@/components/ui/toast';
 import { Toggle } from '@/components/ui/field';
@@ -510,6 +511,13 @@ function Results() {
     activeScore.band === 'Strong' ? 'Highly credit-ready and bankable' :
     'Early-stage institutional formation';
 
+  const distanceToTarget =
+    activeScore.overallScore >= 80
+      ? `${(activeScore.overallScore - 80).toFixed(1)} pts above bank-ready · 80+`
+      : activeScore.overallScore >= 60
+        ? `${(activeScore.overallScore - 60).toFixed(1)} pts above credit-eligible · 60+`
+        : `${(60 - activeScore.overallScore).toFixed(1)} pts below credit-eligible · target 60`;
+
   const roadmapGroups = ROADMAP_STAGES.map((stage) => ({
     stage,
     items: roadmapItems.filter((i) => i.stageLabel === stage),
@@ -562,6 +570,12 @@ function Results() {
               Limited financial history (under 3 years). The score will refine as audited years are recorded.
             </p>
           )}
+          <div className="mt-6 max-w-md">
+            <ScoreTarget score={activeScore.overallScore} />
+            <p className="mt-2 text-[12px] text-ink-soft">
+              Distance to target: {distanceToTarget}
+            </p>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-paper-line pb-4">

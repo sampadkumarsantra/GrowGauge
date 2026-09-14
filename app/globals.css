@@ -447,3 +447,67 @@ input[type='range']::-moz-range-thumb {
   stroke-dasharray: 100;
   animation: gauge-draw 1.2s ease-out forwards;
 }
+
+/* ── Target board (goal-oriented gauge) ── */
+.score-target {
+  width: 100%;
+}
+.score-target svg {
+  overflow: visible;
+}
+.zt-early {
+  fill: var(--clay);
+  opacity: 0.28;
+}
+.zt-dev {
+  fill: #aeb4c4;
+  opacity: 0.35;
+}
+.zt-mod {
+  fill: var(--indigo);
+  opacity: 0.32;
+}
+.zt-strong {
+  fill: var(--leaf);
+  opacity: 0.34;
+}
+.zt-tick {
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+.zt-num {
+  font-size: 5.5px;
+  font-weight: 700;
+  fill: var(--ink-mute);
+}
+.zt-needle {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+.zt-needle-gap {
+  stroke: var(--clay);
+  fill: var(--clay);
+}
+.zt-needle-hit {
+  stroke: var(--indigo);
+  fill: var(--indigo);
+}
+.zt-needle-strong {
+  stroke: var(--leaf);
+  fill: var(--leaf);
+}
+.zt-labels {
+  position: relative;
+  height: 0;
+}
+.zt-label {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}

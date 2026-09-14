@@ -273,6 +273,10 @@ function AssessForm() {
           <h1 className="font-slab text-3xl font-semibold tracking-tight text-ink">
             Step-by-step organisational assessment
           </h1>
+          <p className="text-[12px] text-ink-mute mt-2">
+            Aim for <span className="font-semibold text-indigo">60+</span> = credit
+            eligible · <span className="font-semibold text-leaf">80+</span> = bank-ready
+          </p>
         </div>
         <Button variant="quiet" type="button" onClick={loadSampleProfile} className="shrink-0 self-start">
           <Sparkles className="w-4 h-4" />

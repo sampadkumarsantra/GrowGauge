@@ -77,6 +77,11 @@ export default function LeaderboardPage() {
           Only FPOs that explicitly opted in appear here. A board publishes once a district has
           enough opted-in assessments to be fair.
         </p>
+        <p className="text-[12px] text-ink-mute pt-1">
+          Target bands: <span className="font-semibold text-indigo">60+</span> credit
+          eligible · <span className="font-semibold text-leaf">80+</span> bank-ready · the
+          leaderboard ranks by overall score.
+        </p>
       </header>
 
       {/* Filters */}
