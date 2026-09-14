@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decryptSessionToken, sessionCookieName } from '@/lib/session-cookie';
+import { decryptSessionToken, sessionCookieName, altSessionCookieName } from '@/lib/session-cookie';
 
 // Empty or too-short secret => the derived fallback in lib/auth.ts applies and
 // cannot be reproduced here (edge runtime has no synchronous Node crypto), so we
@@ -42,7 +42,9 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get(sessionCookieName())?.value;
+  const primary = sessionCookieName(req.nextUrl.origin);
+  const fallback = altSessionCookieName();
+  const token = req.cookies.get(primary)?.value || req.cookies.get(fallback)?.value;
   const payload = token ? await decryptSessionToken(token, AUTH_SECRET) : null;
   const authed = Boolean(payload?.sub);
 

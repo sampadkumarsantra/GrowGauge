@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword } from '@/lib/password';
 import { isRateLimited, RATE_LIMITS } from '@/lib/rate-limit';
-import { decryptSessionToken, sessionCookieName } from '@/lib/session-cookie';
+import { decryptSessionToken, sessionCookieName, altSessionCookieName } from '@/lib/session-cookie';
 import { createHash } from 'crypto';
 
 const AUTH_SECRET_RAW = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
@@ -238,7 +238,7 @@ export const authOptions: NextAuthOptions = {
  */
 export async function getAuthSession(): Promise<AuthSession | null> {
   const cookieStore = cookies();
-  const token = cookieStore.get(sessionCookieName())?.value;
+  const token = cookieStore.get(sessionCookieName())?.value || cookieStore.get(altSessionCookieName())?.value;
   if (!token) return null;
 
   const payload = await decryptSessionToken(token, AUTH_SECRET);

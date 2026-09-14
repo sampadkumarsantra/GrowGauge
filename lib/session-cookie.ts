@@ -2,14 +2,25 @@ import hkdf from '@panva/hkdf';
 import { jwtDecrypt } from 'jose';
 
 const SESSION_COOKIE_PREFIX = process.env.NEXTAUTH_COOKIE_PREFIX ?? 'next-auth';
-const SECURE_COOKIE =
-  process.env.NEXTAUTH_URL?.startsWith('https://') ||
-  process.env.AUTH_URL?.startsWith('https://') ||
-  process.env.NEXT_PUBLIC_APP_URL?.startsWith('https://');
 
-export function sessionCookieName(): string {
-  const securePrefix = SECURE_COOKIE ? '__Secure-' : '';
-  return `${securePrefix}${SESSION_COOKIE_PREFIX}.session-token`;
+function isSecureFromEnv(): boolean {
+  return Boolean(
+    process.env.NEXTAUTH_URL?.startsWith('https://') ||
+      process.env.AUTH_URL?.startsWith('https://') ||
+      process.env.NEXT_PUBLIC_APP_URL?.startsWith('https://')
+  );
+}
+
+export function sessionCookieName(origin?: string): string {
+  const secure = isSecureFromEnv() || Boolean(origin?.startsWith('https://'));
+  const prefix = secure ? '__Secure-' : '';
+  return `${prefix}${SESSION_COOKIE_PREFIX}.session-token`;
+}
+
+export function altSessionCookieName(): string {
+  const secure = isSecureFromEnv();
+  const prefix = secure ? '' : '__Secure-';
+  return `${prefix}${SESSION_COOKIE_PREFIX}.session-token`;
 }
 
 export interface DecodedSession {
