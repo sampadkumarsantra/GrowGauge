@@ -1,12 +1,13 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AuthShell from '@/components/ui/auth-shell';
 
 export default function VerifyEmailPage() {
   const params = useParams();
+  const router = useRouter();
   const token = typeof params?.token === 'string' ? params.token : '';
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -26,6 +27,7 @@ export default function VerifyEmailPage() {
       .then(async (res) => {
         if (res.ok) {
           setStatus('success');
+          setTimeout(() => router.replace('/dashboard'), 1200);
         } else {
           const data = await res.json().catch(() => ({}));
           setStatus('error');
@@ -36,7 +38,7 @@ export default function VerifyEmailPage() {
         setStatus('error');
         setErrorMsg('Could not reach the server. Please try again.');
       });
-  }, [token]);
+  }, [token, router]);
 
   if (status === 'loading') {
     return (
@@ -51,10 +53,10 @@ export default function VerifyEmailPage() {
       <AuthShell title="Email verified" subtitle="">
         <div className="text-center space-y-4">
           <p className="text-[14px] text-ink-soft leading-relaxed">
-            Your email has been verified. You can now use all features of your account.
+            Your email has been verified. Taking you to your dashboard\u2026
           </p>
-          <Link href="/login" className="btn btn-primary w-full">
-            Log in
+          <Link href="/dashboard" className="btn btn-primary w-full">
+            Go to dashboard
           </Link>
         </div>
       </AuthShell>

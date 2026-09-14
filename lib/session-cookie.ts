@@ -1,5 +1,5 @@
 import hkdf from '@panva/hkdf';
-import { jwtDecrypt } from 'jose';
+import { jwtDecrypt, EncryptJWT } from 'jose';
 
 const SESSION_COOKIE_PREFIX = process.env.NEXTAUTH_COOKIE_PREFIX ?? 'next-auth';
 
@@ -56,4 +56,19 @@ export async function decryptSessionToken(
   } catch {
     return null;
   }
+}
+
+export async function encryptSessionToken(
+  payload: Record<string, unknown>,
+  secret: string,
+  maxAgeSeconds: number
+): Promise<string> {
+  const key = await deriveKey(secret);
+  const now = Math.floor(Date.now() / 1000);
+  return await new EncryptJWT(payload)
+    .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+    .setIssuedAt(now)
+    .setExpirationTime(now + maxAgeSeconds)
+    .setJti(crypto.randomUUID())
+    .encrypt(key);
 }
