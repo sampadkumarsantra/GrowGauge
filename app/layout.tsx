@@ -3,6 +3,7 @@ import './globals.css';
 import Link from 'next/link';
 import { GrowGaugeMark } from '@/components/ui/growgauge-mark';
 import { NavHeader } from '@/components/ui/nav-header';
+import { getAuthSession } from '@/lib/auth';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://growgauge.in'),
@@ -37,6 +38,9 @@ const NAV_LINKS = [
 ];
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getAuthSession();
+  const authed = Boolean(session);
+
   return (
     <html lang="en">
       <head>
@@ -60,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
 
             <nav className="flex items-center gap-1 sm:gap-2">
-              <NavHeader />
+              <NavHeader authed={authed} />
             </nav>
           </div>
         </header>
@@ -91,6 +95,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   { href: '/leaderboard', label: 'District leaderboard' },
                   { href: '/research', label: 'Researcher dataset' },
                   { href: '/facilitator', label: 'Facilitator dashboard' },
+                  { href: '/login', label: 'Log in' },
+                  { href: '/register', label: 'Create an account' },
                   { href: '/about', label: 'Scoring methodology' },
                 ].map((l) => (
                   <li key={l.href}>
