@@ -41,7 +41,7 @@ export default async function DashboardPage() {
           {session.user.role === 'facilitator' ? (
             <>
               Facilitator account ·{' '}
-              <Link href="/facilitator" className="font-semibold">
+              <Link href={`/facilitator/${session.user.id}`} className="font-semibold">
                 Open your referral dashboard
               </Link>
             </>

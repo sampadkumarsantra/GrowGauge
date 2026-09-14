@@ -1,45 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
+import { requireSession } from '@/lib/require-session';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
-    const organization = typeof body.organization === 'string' ? body.organization.trim() : '';
+    const auth = await requireSession();
+    if (auth.error) return auth.error;
 
-    if (!name) {
-      return NextResponse.json({ error: 'Facilitator name is required' }, { status: 400 });
-    }
-    if (!organization) {
-      return NextResponse.json({ error: 'Organization name is required' }, { status: 400 });
+    const { session } = auth;
+    const existing = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    const accessToken = crypto.randomBytes(24).toString('hex');
-
-    const facilitator = await prisma.facilitator.create({
-      data: {
-        name,
-        organization,
-        accessToken,
-      },
+    const user = await prisma.user.update({
+      where: { id: existing.id },
+      data: { role: 'facilitator' },
     });
 
     return NextResponse.json(
       {
-        id: facilitator.id,
-        name: facilitator.name,
-        organization: facilitator.organization,
-        accessToken: facilitator.accessToken,
+        id: user.id,
+        name: user.name || user.email,
         message:
-          'Facilitator created. Share your dashboard link and invite others using the assessment invite link.',
+          'Facilitator dashboard created. Share your invite link with the FPOs you support.',
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating facilitator:', error);
-    return NextResponse.json({ error: 'Internal server error while creating facilitator' }, { status: 500 });
+    console.error('Error enabling facilitator dashboard:', error);
+    return NextResponse.json(
+      { error: 'Internal server error while creating facilitator dashboard' },
+      { status: 500 }
+    );
   }
 }

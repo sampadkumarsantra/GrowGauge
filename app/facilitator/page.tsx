@@ -2,12 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Field, TextInput } from '@/components/ui/field';
 
 export default function FacilitatorCreatePage() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [organization, setOrganization] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,16 +17,20 @@ export default function FacilitatorCreatePage() {
       const res = await fetch('/api/facilitator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, organization }),
+        body: JSON.stringify({}),
       });
+      const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to create facilitator dashboard');
+      if (res.status === 401) {
+        router.push('/login?callbackUrl=/facilitator');
+        return;
       }
 
-      const data = await res.json();
-      router.push(`/facilitator/${data.id}?token=${data.accessToken}`);
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create facilitator dashboard');
+      }
+
+      router.push(`/facilitator/${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       setIsSubmitting(false);
@@ -44,33 +45,13 @@ export default function FacilitatorCreatePage() {
           Track the FPOs you support
         </h1>
         <p className="text-[14px] text-ink-soft leading-relaxed">
-          Create a dashboard, share one assessment-invite link with the FPOs you support, and
+          Activate your dashboard, share one assessment-invite link with the FPOs you support, and
           follow their credit-readiness over time.
         </p>
       </header>
 
       <div className="sheet px-5 sm:px-8 py-6">
         <form onSubmit={handleCreate} className="space-y-5">
-          <Field label="Facilitator name">
-            <TextInput
-              type="text"
-              placeholder="e.g. Sushma Devi"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </Field>
-
-          <Field label="Organization (CBBO / NGO / Agency)">
-            <TextInput
-              type="text"
-              placeholder="e.g. JSS Krishi Vikas Kendra"
-              value={organization}
-              onChange={(e) => setOrganization(e.target.value)}
-              required
-            />
-          </Field>
-
           {error && <p className="text-[13px] text-clay">{error}</p>}
 
           <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
@@ -79,8 +60,8 @@ export default function FacilitatorCreatePage() {
         </form>
 
         <p className="text-[12px] text-ink-mute mt-6 leading-relaxed">
-          No password is needed. Your dashboard is secured with a private access token embedded in
-          its link — treat it like a password.
+          Your dashboard is tied to your logged-in GrowGauge account. FPOs you refer fill the
+          assessment with your invite link, and their scorecards land here automatically.
         </p>
       </div>
     </div>

@@ -120,6 +120,8 @@ function Results() {
 
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [newCycleLoading, setNewCycleLoading] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const [claimed, setClaimed] = useState(false);
   const [badgeQr, setBadgeQr] = useState<string | null>(null);
 
   const [aiOpen, setAiOpen] = useState(false);
@@ -360,6 +362,34 @@ function Results() {
     }
   };
 
+  const handleSaveToAccount = async () => {
+    if (!id || !token) {
+      setSaveError('This scorecard link is missing its access token. Use the full private link.');
+      return;
+    }
+    setClaiming(true);
+    try {
+      const res = await fetch(`/api/fpo/${id}/claim?token=${encodeURIComponent(token)}`, {
+        method: 'POST',
+      });
+      if (res.status === 401) {
+        window.location.href = `/login?callbackUrl=${encodeURIComponent(
+          `/results/${id}?token=${encodeURIComponent(token)}`
+        )}`;
+        return;
+      }
+      if (!res.ok) throw new Error('Failed to save scorecard');
+      setClaimed(true);
+      setSaveMessage('Scorecard saved to your dashboard.');
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : 'Failed to save scorecard. Please try again.'
+      );
+    } finally {
+      setClaiming(false);
+    }
+  };
+
   // ── Copy links ──
   const copyShareLink = () => {
     if (typeof window !== 'undefined') {
@@ -551,6 +581,20 @@ function Results() {
           <button type="button" onClick={handleNewCycle} disabled={newCycleLoading} className="btn-link disabled:opacity-50">
             {newCycleLoading ? 'Starting a new cycle…' : 'Start a new assessment cycle'}
           </button>
+          {claimed ? (
+            <Link href="/dashboard" className="btn-link">
+              Saved — open My Dashboard
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSaveToAccount}
+              disabled={claiming}
+              className="btn-link disabled:opacity-50"
+            >
+              {claiming ? 'Saving…' : 'Save to my account'}
+            </button>
+          )}
         </div>
       </section>
 

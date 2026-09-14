@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface FPOEntry {
@@ -17,7 +17,6 @@ interface FPOEntry {
 interface DashboardData {
   facilitatorId: string;
   name: string;
-  organization: string;
   totalFpos: number;
   assessedCount: number;
   fpos: FPOEntry[];
@@ -32,9 +31,8 @@ const BAND_TEXT: Record<string, string> = {
 
 function Dashboard() {
   const params = useParams();
-  const searchParams = useSearchParams();
+  const router = useRouter();
   const id = params.id as string;
-  const token = searchParams.get('token');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,16 +50,12 @@ function Dashboard() {
       return;
     }
 
-    if (!token) {
-      setError(
-        'This dashboard link is missing its access token. Check that the full link (including the ?token= part) copied correctly.'
-      );
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch(`/api/facilitator/${id}/fpos?token=${token}`);
+      const res = await fetch(`/api/facilitator/${id}/fpos`);
+      if (res.status === 401) {
+        router.push(`/login?callbackUrl=/facilitator/${id}`);
+        return;
+      }
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || 'Failed to load dashboard');
@@ -72,7 +66,7 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [id, token]);
+  }, [id, router]);
 
   useEffect(() => {
     loadData();
@@ -96,7 +90,7 @@ function Dashboard() {
         <h1 className="font-slab text-2xl font-semibold text-ink">Dashboard access error</h1>
         <p className="text-sm text-ink-soft leading-relaxed">{error}</p>
         <Link href="/facilitator" className="btn-link">
-          Create a dashboard
+          Open your dashboard
         </Link>
       </div>
     );
@@ -110,7 +104,6 @@ function Dashboard() {
         <h1 className="font-slab text-3xl font-semibold tracking-tight text-ink mt-1">
           {data.name}
         </h1>
-        <p className="text-[13px] text-ink-mute mt-0.5">{data.organization}</p>
         <p className="mt-3 text-[13px] text-ink-soft">
           <strong className="font-semibold text-ink">{data.totalFpos}</strong> referred FPO
           {data.totalFpos === 1 ? '' : 's'} ·{' '}

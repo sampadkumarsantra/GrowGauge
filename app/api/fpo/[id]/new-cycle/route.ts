@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthSession } from '@/lib/auth';
 import { getAccessToken, hydrateSubmission, loadAuthorizedSubmission } from '@/lib/api-helpers';
 import { calculateScore } from '@/lib/scoring';
 import crypto from 'crypto';
@@ -27,12 +28,15 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const input = hydrateSubmission(existing);
     const scoreResult = calculateScore(input);
     const accessToken = crypto.randomBytes(24).toString('hex');
+    const session = await getAuthSession();
 
-    // A new cycle is a new anonymous submission secured by its own access token.
+    // A new cycle keeps the same fpoGroupId (score history) and is attached to
+    // the signed-in account when applicable.
     const created = await prisma.fPOSubmission.create({
       data: {
         accessToken,
         fpoGroupId: existing.fpoGroupId || crypto.randomUUID(),
+        userId: session?.user.id ?? null,
         fpoName: existing.fpoName,
         state: existing.state,
         district: existing.district,

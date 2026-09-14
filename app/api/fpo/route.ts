@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthSession } from '@/lib/auth';
 import { calculateScore, FPOSubmissionInput } from '@/lib/scoring';
 import { validateFPOSubmission } from '@/lib/validation';
 import crypto from 'crypto';
@@ -28,21 +29,27 @@ export async function POST(req: NextRequest) {
     // Generate secure random access token
     const accessToken = crypto.randomBytes(24).toString('hex');
 
+    const session = await getAuthSession();
+    const userId = session?.user.id ?? null;
+
     // Persist submission and score in database
     const facilitatorId = body.facilitatorId || null;
     if (facilitatorId) {
-      const facilitatorExists = await prisma.facilitator.findUnique({ where: { id: facilitatorId } });
+      const facilitatorExists = await prisma.user.findUnique({
+        where: { id: facilitatorId, role: 'facilitator' },
+      });
       if (!facilitatorExists) {
         return NextResponse.json({ error: 'Invalid facilitator reference' }, { status: 400 });
       }
     }
 
-    // No account needed: access to the scorecard is the private access token
-    // embedded in the share link.
+    // Anonymous submissions stay access-token-secured; signed-in submissions are
+    // also attached to the user account so they appear on the dashboard.
     const submission = await prisma.fPOSubmission.create({
       data: {
         accessToken,
         fpoGroupId: body.fpoGroupId || crypto.randomUUID(),
+        userId,
         fpoName: body.fpoName.trim(),
         state: body.state.trim(),
         district: body.district.trim(),

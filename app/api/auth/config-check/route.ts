@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { AUTH_SECRET } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,10 +7,13 @@ export async function GET() {
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
   );
 
+  const rawSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '';
+  const derived = rawSecret.length < 32;
+
   return NextResponse.json({
-    authSecretSet: Boolean(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),
-    authSecretLength: (process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '').length,
-    authSecretDerived: AUTH_SECRET.length >= 32,
+    authSecretSet: Boolean(rawSecret),
+    authSecretLength: rawSecret.length,
+    authSecretDerived: derived,
     googleConfigured,
     nextAuthUrl: process.env.NEXTAUTH_URL || process.env.AUTH_URL || null,
     appUrl: process.env.NEXT_PUBLIC_APP_URL || null,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getAccessToken } from '@/lib/api-helpers';
+import { requireSession } from '@/lib/require-session';
 
 interface RouteContext {
   params: { id: string };
@@ -8,25 +8,28 @@ interface RouteContext {
 
 /**
  * Returns all FPOs referred through this facilitator, with their scores.
- * Authorizes via the facilitator's private accessToken (?token=...).
+ * Authorizes via the logged-in session: only the facilitator whose account
+ * id matches :id can view this dashboard.
  */
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = params;
-    const token = getAccessToken(req);
+    const auth = await requireSession();
+    if (auth.error) return auth.error;
 
-    const facilitator = await prisma.facilitator.findUnique({ where: { id } });
-
-    if (!facilitator) {
-      return NextResponse.json({ error: 'Facilitator not found' }, { status: 404 });
+    const { session } = auth;
+    if (session.user.role !== 'facilitator' || session.user.id !== id) {
+      return NextResponse.json(
+        { error: 'Forbidden: this dashboard belongs to another account' },
+        { status: 403 }
+      );
     }
 
-    const tokenValid = Boolean(token && facilitator.accessToken === token);
-
-    if (!tokenValid) {
-      return NextResponse.json({ error: 'Forbidden: Invalid facilitator access token' }, { status: 403 });
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return NextResponse.json({ error: 'Facilitator not found' }, { status: 404 });
     }
 
     const submissions = await prisma.fPOSubmission.findMany({
@@ -48,9 +51,8 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const assessedCount = fpos.filter((f) => f.band !== null).length;
 
     return NextResponse.json({
-      facilitatorId: facilitator.id,
-      name: facilitator.name,
-      organization: facilitator.organization,
+      facilitatorId: user.id,
+      name: user.name || user.email,
       totalFpos: fpos.length,
       assessedCount,
       fpos,
