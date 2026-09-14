@@ -1,7 +1,7 @@
 import LoginForm from './login-form';
 
 interface LoginPageProps {
-  searchParams: { callbackUrl?: string; error?: string };
+  searchParams: { callbackUrl?: string; error?: string; unverified?: string; email?: string };
 }
 
 export default function LoginPage({ searchParams }: LoginPageProps) {
@@ -12,12 +12,17 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
       : '/dashboard';
   const error: string | null =
     typeof searchParams?.error === 'string' ? searchParams.error : null;
+  const unverified = searchParams?.unverified === '1';
+  const unverifiedEmail =
+    typeof searchParams?.email === 'string' ? searchParams.email : '';
 
   return (
     <LoginForm
       googleEnabled={googleEnabled}
       initialCallbackUrl={callbackUrl}
       initialError={error}
+      initialUnverified={unverified}
+      initialUnverifiedEmail={unverifiedEmail}
     />
   );
 }

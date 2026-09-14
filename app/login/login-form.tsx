@@ -33,16 +33,46 @@ export default function LoginForm({
   googleEnabled,
   initialCallbackUrl = '/dashboard',
   initialError = null,
+  initialUnverified = false,
+  initialUnverifiedEmail = '',
 }: {
   googleEnabled: boolean;
   initialCallbackUrl?: string;
   initialError?: string | null;
+  initialUnverified?: boolean;
+  initialUnverifiedEmail?: string;
 }) {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialUnverifiedEmail);
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(initialError ? urlError(initialError) : null);
+  const [resending, setResending] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
+
+  const handleResend = async () => {
+    const target = email.trim();
+    if (!target) return;
+    setResending(true);
+    setResendSent(false);
+    try {
+      const res = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: target }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setResendSent(true);
+      } else {
+        setError(data?.error ?? 'Could not resend the verification link. Please try again.');
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +103,27 @@ export default function LoginForm({
 
   return (
     <AuthShell title="Log in to GrowGauge" subtitle="Access your saved assessments and scorecards.">
+      {initialUnverified && (
+        <div className="mb-5 sheet-tint px-4 py-3 text-[13px] text-ink-soft leading-relaxed">
+          <p>
+            Your email is not verified yet. Verify it to reset your password and keep your
+            assessments available on any device.{' '}
+            <button
+              type="button"
+              disabled={resending}
+              onClick={handleResend}
+              className="font-semibold text-indigo hover:underline disabled:opacity-50"
+            >
+              {resending ? 'Sending\u2026' : 'Resend the verification link'}
+            </button>
+            {resendSent && (
+              <span className="block mt-1 text-[12px] text-ink-mute">
+                If an account exists for this email, a new verification link is on its way.
+              </span>
+            )}
+          </p>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field label="Email">
           <input
