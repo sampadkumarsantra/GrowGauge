@@ -1,8 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Link from 'next/link';
-import { GrowGaugeMark } from '@/components/ui/growgauge-mark';
-import { NavHeader } from '@/components/ui/nav-header';
+import { SiteNav } from '@/components/ui/site-nav';
 import { getAuthSession } from '@/lib/auth';
 
 export const metadata: Metadata = {
@@ -17,29 +16,37 @@ export const metadata: Metadata = {
     icon: [
       { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/growgauge-icon.svg', type: 'image/svg+xml' },
     ],
     apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.webmanifest',
   openGraph: {
+    siteName: 'GrowGauge',
     title: 'GrowGauge — FPO Credit-Readiness Scorecard',
     description:
       'A free, open-methodology credit-readiness diagnostic for Indian Farmer Producer Organizations.',
     type: 'website',
-    images: [{ url: '/opengraph.png', width: 1200, height: 630 }],
+    images: [{ url: '/opengraph.png', width: 1200, height: 630, alt: 'GrowGauge credit-readiness scorecard' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GrowGauge — FPO Credit-Readiness Scorecard',
+    description:
+      'A free, open-methodology credit-readiness diagnostic for Indian Farmer Producer Organizations.',
+    images: ['/opengraph.png'],
   },
 };
 
-const NAV_LINKS = [
-  { href: '/assess', label: 'Assess' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/facilitator', label: 'Facilitators' },
-  { href: '/about', label: 'Methodology' },
-];
+export const viewport: Viewport = {
+  themeColor: '#2f3e5c',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getAuthSession();
-  const authed = Boolean(session);
+  const user = session?.user ?? null;
 
   return (
     <html lang="en">
@@ -52,96 +59,32 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="min-h-screen flex flex-col antialiased">
-        <header className="sticky top-0 z-40 bg-indigo border-b border-black/20">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-            <Link href="/" className="flex items-center no-underline hover:text-inherit">
-              <GrowGaugeMark
-                variant="horizontal"
-                color="paper"
-                className="w-[152px]"
-                label="GrowGauge — home"
-              />
-            </Link>
+        <SiteNav user={user} />
 
-            <nav className="flex items-center gap-1 sm:gap-2">
-              <NavHeader authed={authed} />
+        <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+
+        <footer className="bg-indigo border-t border-black/20 mt-20 pb-20 sm:pb-8">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px] text-paper/60">
+            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 font-medium text-paper/75">
+              {[
+                { href: '/about', label: 'About' },
+                { href: '/research', label: 'Research' },
+                { href: '/privacy', label: 'Privacy Policy' },
+                { href: '/terms', label: 'Terms' },
+              ].map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="no-underline hover:text-paper hover:underline hover:underline-offset-4"
+                >
+                  {l.label}
+                </Link>
+              ))}
             </nav>
-          </div>
-        </header>
-
-        <main className="flex-1">{children}</main>
-
-        <footer className="bg-indigo border-t border-black/20 mt-20">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="space-y-3">
-              <GrowGaugeMark
-                variant="horizontal"
-                color="paper"
-                className="w-[136px]"
-                label="GrowGauge"
-              />
-              <p className="text-[13px] leading-relaxed text-paper/65 max-w-xs">
-                An open-methodology credit-readiness diagnostic for Indian Farmer Producer
-                Organisations, built on citable economic models — HHI, CV, Operating Ratio.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="section-kicker text-paper/60 mb-3">Platform</h4>
-              <ul className="space-y-2">
-                {[
-                  { href: '/', label: 'Home' },
-                  { href: '/assess', label: 'Assess an FPO' },
-                  { href: '/leaderboard', label: 'District leaderboard' },
-                  { href: '/research', label: 'Researcher dataset' },
-                  { href: '/facilitator', label: 'Facilitator dashboard' },
-                  { href: '/login', label: 'Log in' },
-                  { href: '/register', label: 'Create an account' },
-                  { href: '/about', label: 'Scoring methodology' },
-                ].map((l) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="text-[13px] text-paper/70 no-underline hover:text-paper hover:underline hover:decoration-paper/60 hover:underline-offset-4"
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="section-kicker text-paper/60 mb-3">Research</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    href="/research"
-                    className="text-[13px] text-paper/70 no-underline hover:text-paper hover:underline hover:decoration-paper/60 hover:underline-offset-4"
-                  >
-                    Open aggregate dataset
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/about"
-                    className="text-[13px] text-paper/70 no-underline hover:text-paper hover:underline hover:decoration-paper/60 hover:underline-offset-4"
-                  >
-                    Scoring methodology
-                  </Link>
-                </li>
-              </ul>
-              <p className="text-[13px] leading-relaxed text-paper/65 mt-3">
-                Scoring weights and quantitative models were formulated in research collaboration
-                with agricultural economists at{' '}
-                <span className="text-paper/90 font-semibold">ICAR-IARI Jharkhand</span>.
-              </p>
-            </div>
-          </div>
-
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-10 pt-8 border-t border-paper/10 flex flex-col sm:flex-row justify-between gap-2 text-xs text-paper/50">
-            <p>© {new Date().getFullYear()} GrowGauge. Open methodology for farmer institutionalisation.</p>
-            <p>This is a self-assessment tool, not an official credit rating.</p>
+            <p>
+              Methodology developed by{' '}
+              <span className="text-paper/85 font-semibold">GrowGauge, ICAR-IARI Jharkhand</span>.
+            </p>
           </div>
         </footer>
       </body>

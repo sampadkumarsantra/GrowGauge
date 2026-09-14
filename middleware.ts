@@ -22,6 +22,8 @@ const PUBLIC_PREFIXES = [
   '/research',
   '/leaderboard',
   '/about',
+  '/privacy',
+  '/terms',
 ];
 
 // Public API namespaces (each route still enforces its own token/validation).

@@ -76,15 +76,13 @@ export default async function DashboardPage() {
       )}
 
       {submissions.length === 0 ? (
-        <div className="mt-8 border border-paper-line bg-white px-5 sm:px-6 py-10 text-center">
+        <div className="mt-8 border border-paper-line bg-white px-5 sm:px-6 py-12 text-center">
           <p className="text-[14px] text-ink-soft leading-relaxed">
-            No saved scorecards yet. Complete an assessment while logged in and it will appear here
-            — or <Link href="/assess" className="font-semibold">assess an FPO</Link> now.
+            You haven&rsquo;t assessed an FPO yet — start your first assessment.
           </p>
-          <p className="mt-3 text-[12px] text-ink-mute">
-            Have an older scorecard link? Open it from your saved email and choose{' '}
-            <em>&ldquo;Save this scorecard to my account&rdquo;</em>.
-          </p>
+          <Link href="/assess" className="btn btn-primary mt-5 inline-flex">
+            New Assessment
+          </Link>
         </div>
       ) : (
         <section className="mt-8">

@@ -251,7 +251,7 @@ function AssessForm() {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || 'Failed to submit scorecard');
+        throw new Error('Something went wrong saving your assessment — your answers are still here. Try again.');
       }
 
       const data = await res.json();

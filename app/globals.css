@@ -76,6 +76,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
+    min-height: 44px;
     padding: 0.55rem 1.1rem;
     font-size: 0.875rem;
     font-weight: 600;
@@ -159,8 +160,9 @@ body {
   .field-field,
   .input-field {
     width: 100%;
+    min-height: 44px;
     padding: 0.5rem 0.7rem;
-    font-size: 0.875rem;
+    font-size: 1rem;
     color: var(--ink);
     background: #fff;
     border: 1px solid var(--paper-line);
@@ -262,6 +264,28 @@ body {
     background: var(--paper-tile);
     border: 1px solid var(--paper-line);
     border-radius: var(--radius);
+  }
+
+  /* ── Account menu / bottom-sheet row ── */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--indigo);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    background: transparent;
+    transition: background 120ms ease;
+  }
+  .row:hover {
+    background: var(--paper-tile);
+    color: var(--ink);
   }
 
   /* ── Section rule / heading treatment ── */

@@ -114,10 +114,23 @@ export default function LeaderboardPage() {
 
       {error && <p className="mt-4 text-[13px] text-clay">{error}</p>}
 
+      {loading && (
+        <div className="mt-6 sheet px-5 sm:px-6 py-3 space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-4 py-2">
+              <div className="w-8 h-4 bg-paper-tile" />
+              <div className="flex-1 h-4 bg-paper-tile" />
+              <div className="w-12 h-4 bg-paper-tile" />
+            </div>
+          ))}
+        </div>
+      )}
+
       {data && !data.available && (
         <div className="mt-6 border border-paper-line bg-white px-5 sm:px-6 py-6">
-          <p className="font-slab text-xl font-semibold text-ink">Leaderboard not published yet</p>
-          <p className="mt-1 text-[13px] text-ink-soft leading-relaxed">{data.message}</p>
+          <p className="text-[14px] text-ink-soft leading-relaxed">
+            Not enough FPOs have opted in yet to show a leaderboard for this district.
+          </p>
           <p className="mt-2 text-[12px] text-ink-mute">
             {data.optedInCount} opted-in assessment(s) in this district out of {data.totalInDistrict}{' '}
             total submission(s).
